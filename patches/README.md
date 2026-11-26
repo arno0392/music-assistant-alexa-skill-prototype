@@ -8,3 +8,4 @@ Scripts appliqués sur des copies des fichiers du conteneur (`/app/src/skill/…
 | `fix_apl.py` | `apl.py` | URL audio APL encodée (%20) et .flac -> .mp3 |
 | `fix_apl_buttons.py` | `apl_document.json` + `lambda_function.py` | boutons suivant/précédent de l'écran APL -> Music Assistant |
 | `fix_apl_refresh.py` | `ma_control.py` + `lambda_function.py` | écran APL mis à jour quand MA enchaîne le morceau suivant dans le flux |
+| `fix_apl_time.py` | `apl_document.json` + `ma_control.py` + `lambda_function.py` | temps écoulé / durée du morceau en cours sur l'écran APL (après fix_apl_refresh.py) |
