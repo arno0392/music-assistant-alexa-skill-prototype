@@ -11,3 +11,4 @@ Scripts appliqués sur des copies des fichiers du conteneur (`/app/src/skill/…
 | `fix_apl_time.py` | `apl_document.json` + `ma_control.py` + `lambda_function.py` | temps écoulé / durée du morceau en cours sur l'écran APL (après fix_apl_refresh.py) |
 | `fix_live_page.py` | `shared_store.py`, `ma_routes.py`, `alexa_routes.py`, `util.py`, `apl_document.json`, `lambda_function.py` | écran APL piloté par Music Assistant 2.11 (pageLive, /ma/control, /alexa/playback-state) + temps par morceau corrigé |
 | `fix_live_report.py` | `apl_document.json`, `util.py`, `lambda_function.py` | position/état réels de l'écran APL transmis au skill (après fix_live_page.py) |
+| `fix_apl_ux.py` | `apl_document.json`, `lambda_function.py`, `ma_control.py` | barre de lecture -> seek Music Assistant, retour visuel des boutons, temps recalé à chaque nouvel écran |
