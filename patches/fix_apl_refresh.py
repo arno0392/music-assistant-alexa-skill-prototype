@@ -31,7 +31,7 @@ async def _get_now_playing(server_url, token, player_id):
             album = getattr(album_obj, "name", "") or ""
             image = ""
             try:
-                image = client.get_media_item_image_url(item, size=512) or ""
+                image = client.get_media_item_image_url(item) or ""
             except Exception:
                 image = ""
             return {"queue_item_id": item.queue_item_id, "title": title,
