@@ -1,4 +1,4 @@
-"""PATCH: move between the screen's buttons with a TV remote (after fix_tv_remote/fix_tv_diag).
+"""PATCH: move between the screen's buttons with a TV remote (after fix_tv_remote).
 
 A TV's Alexa app sends the remote's keys to the page but gives focus to none of its
 buttons. The page now keeps its own selection, like the buttons of a TV app: the first
@@ -43,7 +43,6 @@ def keys(*names):
 PREV = keys("MediaRewind", "MediaPreviousTrack", "MediaTrackPrevious")
 NEXT = keys("MediaFastForward", "MediaNextTrack", "MediaTrackNext")
 PLAY = keys("MediaPlayPause", "MediaPlay", "MediaPause")
-diag = {"type": "SendEvent", "arguments": ["KeyDiag", "${event.keyboard.code}", "${event.keyboard.key}"]}
 
 # undo the earlier attempts: native focus on the lyrics button never took on a TV
 lyr = find(root, lambda n: n.get("id") == "maLyricsButton")
@@ -117,7 +116,6 @@ press = [
                   {"type": "ScrollToIndex", "componentId": "maLyrics", "index": "${lyricsIndex}", "align": "center"}]},
 ]
 move = lambda expr: [{"type": "SetValue", "componentId": "AudioPlayerRoot", "property": "remoteFocus", "value": expr}]
-fdiag = {"type": "SendEvent", "arguments": ["KeyDiag", "${event.keyboard.code}", "${event.keyboard.key}", "focused"]}
 on_bar = "remoteFocus == %d" % SLIDER
 catcher = {
     "type": "TouchWrapper", "id": "maRemote", "position": "absolute", "top": 0, "left": 0,
@@ -136,8 +134,6 @@ catcher = {
         {"when": "${%s}" % PLAY, "commands": [{"type": "SendEvent", "arguments": ["PlayPause"]}]},
     ],
 }
-for h in catcher["handleKeyDown"]:
-    h["commands"] = [fdiag] + h["commands"]
 root["items"].append(catcher)
 
 # Keys that reach the document mean nothing has focus yet: take it and highlight
@@ -148,14 +144,13 @@ def take_focus(index):
 
 
 doc["handleKeyDown"] = [
-    {"when": "${%s}" % keys("ArrowUp"), "commands": [diag] + take_focus(SLIDER)},
-    {"when": "${%s}" % keys("ArrowLeft", "ArrowRight", "ArrowDown"), "commands": [diag] + take_focus(1)},
+    {"when": "${%s}" % keys("ArrowUp"), "commands": take_focus(SLIDER)},
+    {"when": "${%s}" % keys("ArrowLeft", "ArrowRight", "ArrowDown"), "commands": take_focus(1)},
     {"when": "${%s}" % keys("Enter", "NumpadEnter"),
-     "commands": [diag, {"type": "SendEvent", "arguments": ["PlayPause"]}] + take_focus(1)},
-    {"when": "${%s}" % PREV, "commands": [diag, {"type": "SendEvent", "arguments": ["Previous"]}]},
-    {"when": "${%s}" % NEXT, "commands": [diag, {"type": "SendEvent", "arguments": ["Next"]}]},
-    {"when": "${%s}" % PLAY, "commands": [diag, {"type": "SendEvent", "arguments": ["PlayPause"]}]},
-    {"commands": [diag]},
+     "commands": [{"type": "SendEvent", "arguments": ["PlayPause"]}] + take_focus(1)},
+    {"when": "${%s}" % PREV, "commands": [{"type": "SendEvent", "arguments": ["Previous"]}]},
+    {"when": "${%s}" % NEXT, "commands": [{"type": "SendEvent", "arguments": ["Next"]}]},
+    {"when": "${%s}" % PLAY, "commands": [{"type": "SendEvent", "arguments": ["PlayPause"]}]},
 ]
 json.dump(doc, open(doc_path, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
 print("apl_document (navigation TV): patch applique")
