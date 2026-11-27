@@ -42,6 +42,7 @@ for rnd in (1, 2):
         run(f"{W}/fix_apl_followups.py", T),
         run(f"{W}/fix_apl_sequencer.py", T),
         run(f"{W}/fix_seek_offset.py", T),
+        run(f"{W}/fix_time_binds.py", T),
     ]
     text = "".join(outs)
     if rnd == 2:
@@ -356,10 +357,23 @@ now_playing["v"] = dict(now_playing["v"], elapsed_ms=0)   # MA not caught up yet
 clock[0] += 1
 cmds = [c for d in refresh("500|true|0")["directives"] if d["type"].endswith("ExecuteCommands")
         for c in d["commands"] if c.get("property") == "trackOffset"]
-assert cmds and cmds[0]["value"] == -130000, cmds
+assert cmds and cmds[0]["value"] == -130000 and cmds[0]["componentId"] == "videoPlayer", cmds
 clock[0] += 6
 assert not any("trackTotal" in x for x in kinds(refresh("6500|true|-130000"))), "exact offset kept"
 print("OK  seek from the screen: offset set from the requested position, not from MA")
+_doc = json.load(open(os.path.join(S, "apl_document.json")))
+_vid = []
+def _w(x):
+    if isinstance(x, dict):
+        if x.get("id") == "videoPlayer": _vid.append(x)
+        for v in x.values(): _w(v)
+    elif isinstance(x, list):
+        for v in x: _w(v)
+_w(_doc)
+assert {"trackOffset", "pendingElapsed", "needsResync"} <= {b["name"] for b in _vid[0]["bind"]}
+_src = open(os.path.join(S, "lambda_function.py")).read()
+assert not re.search(r'"MaTimeRoot",\s*"property": "(trackOffset|pendingElapsed|needsResync)"', _src)
+print("OK  time binds live on the Video and the skill writes them there")
 
 # ======================= non-APL device / ENABLE_APL=false ===================
 resp = launch(apl=False)

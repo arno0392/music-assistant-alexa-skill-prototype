@@ -24,3 +24,4 @@ Scripts appliqués sur des copies des fichiers du conteneur (`/app/src/skill/…
 | `fix_apl_followups.py` | `apl_document.json`, `ma_control.py`, `lambda_function.py` | temps renvoyé ~6 s après puis recalé si écart > 3 s ; pause/lecture de l'écran renvoyées à MA ; écran gardé 10 min en pause (idleTimeout) ; précédent calculé depuis le titre affiché |
 | `fix_apl_sequencer.py` | `apl_document.json`, `util.py`, `ma_routes.py` | boucle de rafraîchissement sur son propre séquenceur APL (un appui sur l'écran ne la coupe plus) ; logs push-url/control avec pageLive |
 | `fix_seek_offset.py` | `lambda_function.py` | après un déplacement du curseur sur l'écran, temps recalé sur la position demandée (plus de retour à 0) |
+| `fix_time_binds.py` | `apl_document.json`, `lambda_function.py` | valeurs de temps (décalage, recalage) portées par le composant Video lui-même : les recalages s'appliquent enfin |

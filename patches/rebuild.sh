@@ -5,7 +5,7 @@
 set -eu
 
 BRANCH_URL="https://raw.githubusercontent.com/arno0392/music-assistant-alexa-skill-prototype/local-patches/patches"
-SCRIPTS="fix_meta fix_apl fix_apl_buttons fix_apl_refresh fix_apl_time fix_live_page fix_live_report fix_apl_ux fix_apl_seek fix_apl_pause fix_stream_key fix_apl_followups fix_apl_sequencer fix_seek_offset"
+SCRIPTS="fix_meta fix_apl fix_apl_buttons fix_apl_refresh fix_apl_time fix_live_page fix_live_report fix_apl_ux fix_apl_seek fix_apl_pause fix_stream_key fix_apl_followups fix_apl_sequencer fix_seek_offset fix_time_binds"
 FILES="skill/util.py skill/apl.py skill/apl_document.json skill/lambda_function.py skill/ma_control.py shared_store.py music_assistant_api/ma_routes.py alexa_api/alexa_routes.py"
 
 [ -f docker-compose.yml ] || { echo "Lance ce script depuis le dossier du projet (docker-compose.yml)"; exit 1; }
@@ -42,6 +42,7 @@ $P/fix_stream_key.py  "$NEW"
 $P/fix_apl_followups.py "$NEW"
 $P/fix_apl_sequencer.py "$NEW"
 $P/fix_seek_offset.py "$NEW"
+$P/fix_time_binds.py "$NEW"
 
 for f in $FILES; do
     case "$f" in
