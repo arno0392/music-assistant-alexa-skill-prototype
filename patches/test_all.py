@@ -39,6 +39,7 @@ for rnd in (1, 2):
         run(f"{W}/fix_apl_seek.py", T),
         run(f"{W}/fix_apl_pause.py", f"{S}/apl.py"),
         run(f"{W}/fix_stream_key.py", T),
+        run(f"{W}/fix_apl_followups.py", T),
     ]
     text = "".join(outs)
     if rnd == 2:
@@ -68,7 +69,10 @@ util.push_alexa_metadata = _republish
 PLAYER = "Echo de la Cuisine"
 lf.device_mapping.get_player_for_device = lambda d: PLAYER if d == "d" else None
 calls = []
-ma_control.send_player_command = lambda p, c: calls.append(("cmd", p, c)) or True
+refs = []
+ma_control.send_player_command = lambda p, c, ref_item_id=None: refs.append(ref_item_id) or calls.append(("cmd", p, c)) or True
+queue_state = {"v": "playing"}
+ma_control.get_queue_state = lambda p: queue_state["v"]
 ma_control.seek_player = lambda p, s: calls.append(("seek", p, s)) or True
 now_playing = {"v": None}
 ma_control.get_now_playing = lambda p: now_playing["v"]
@@ -271,6 +275,65 @@ resp = refresh()
 assert kinds(resp)[-1] == "ExecuteCommands[Idle,SendEvent]", kinds(resp)
 lf.device_mapping.get_player_for_device = lambda d: PLAYER if d == "d" else None
 print("OK  unmapped device: refresh still works")
+
+# ======================= follow-ups (time, pause sync, idle, previous) =======
+class _SyncThread:
+    def __init__(self, target, args=(), daemon=None):
+        self.t, self.a = target, args
+    def start(self):
+        self.t(*self.a)
+lf._threading = types.SimpleNamespace(Thread=_SyncThread)
+push(H + "s9/Echo de la Cuisine/i9/Echo de la Cuisine.flac", title="T9")
+resp = launch()
+assert resp["directives"][0]["document"]["settings"]["idleTimeout"] == 600000
+assert "|${trackOffset}" in json.dumps(resp["directives"][0]["document"])
+print("OK  APL idleTimeout 10 min, report carries the track offset")
+
+calls.clear()
+now_playing["v"] = {"queue_item_id": "q9", "title": "T9", "artist": "A", "album": "B",
+                    "imageUrl": "", "elapsed_ms": 0, "duration_ms": 0}
+clock[0] += 5
+assert any("trackTotal" in x for x in kinds(refresh("500|true")))
+now_playing["v"] = dict(now_playing["v"], duration_ms=200000, elapsed_ms=6000)
+clock[0] += 5
+assert any("trackTotal" in x for x in kinds(refresh("5500|true|0"))), "duration unknown at first: asked again"
+clock[0] += 5
+assert not any("trackTotal" in x for x in kinds(refresh("10500|true|0")))
+clock[0] += 4
+assert any("trackTotal" in x for x in kinds(refresh("14500|true|0"))), "second pass ~6 s later"
+print("OK  time: re-asked while MA has no duration, then a second pass ~6 s later")
+
+now_playing["v"] = dict(now_playing["v"], elapsed_ms=120000)      # seek from MA web
+clock[0] += 5
+assert any("trackTotal" in x for x in kinds(refresh("19500|true|0"))), "screen 17 s, MA 120 s: resync"
+clock[0] += 5
+now_playing["v"] = dict(now_playing["v"], elapsed_ms=125000)
+assert not any("trackTotal" in x for x in kinds(refresh("22500|true|-102500")))
+print("OK  time: resync when the screen is more than 3 s off MA, not when it matches")
+assert calls == [], calls
+
+queue_state["v"] = "playing"
+clock[0] += 1
+refresh("23500|false|-102500")
+assert calls == [("cmd", PLAYER, "pause")], calls
+queue_state["v"] = "paused"
+clock[0] += 1
+refresh("23500|true|-102500")
+assert calls == [("cmd", PLAYER, "pause"), ("cmd", PLAYER, "resume")], calls
+calls.clear()
+lf._expected_state[PLAYER] = (False, clock[0])        # MA asked for this pause
+queue_state["v"] = "playing"
+refresh("24000|false|-102500")
+assert calls == [], calls
+refresh("24000|true|-102500")                          # MA already playing
+queue_state["v"] = "playing"
+assert calls == [], calls
+print("OK  pause/play on the screen forwarded to MA (not when MA asked it or is already there)")
+
+refs.clear(); calls.clear()
+user_event("Previous")
+assert calls == [("cmd", PLAYER, "previous")] and refs == ["q9"], (calls, refs)
+print("OK  previous computed from the track shown on the screen")
 
 # ======================= non-APL device / ENABLE_APL=false ===================
 resp = launch(apl=False)
