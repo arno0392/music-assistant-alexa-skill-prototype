@@ -44,3 +44,4 @@ Scripts appliqués sur des copies des fichiers du conteneur (`/app/src/skill/…
 | `fix_custom_skip_intents.py` | `lambda_function.py` | intents perso MaNextIntent / MaPreviousIntent (phrases en plus : « chanson précédente »…) traités comme suivant/précédent |
 | `fix_stream_ran_out.py` | `lambda_function.py` | flux épuisé en fin de titre (MA l'a terminé avant un titre 96 kHz) : le skill lance le titre suivant au lieu d'une pause |
 | `fix_multi_player.py` | `shared_store.py`, `ma_routes.py`, `alexa_routes.py`, `util.py`, `lambda_function.py` | plusieurs Echo : un « en cours » par lecteur MA (titre, pochette, flux), selon /devices ou le playerId de MA 2.11 |
+| `fix_tv_remote.py` | `apl_document.json`, `lambda_function.py` | télécommande de TV : gauche/droite = précédent/suivant, OK = lecture/pause, haut/bas = paroles (focus donné au bouton paroles sur une TV) |
