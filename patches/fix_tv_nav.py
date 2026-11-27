@@ -82,16 +82,39 @@ holder["item"][holder["item"].index(bar)] = {
     "opacity": "${remoteFocus < 0 || remoteFocus == %d ? 1 : 0.35}" % SLIDER}
 
 pos = "(videoProgressValue > trackOffset ? videoProgressValue - trackOffset : 0)"
-seek = lambda delta: [{"type": "SetValue", "componentId": "maSeek", "property": "text",
-                       "value": "${Math.max(0, Math.min(trackTotal - 2000, %s %+d))}@${utcTime}" % (pos, delta)}]
+root["bind"].append({"name": "seekTarget", "type": "number", "value": -1})
+video = find(root, lambda n: n.get("id") == "videoPlayer")
+for c in video.get("onTimeUpdate", []):
+    if c.get("componentId") == "slider" and c.get("property") == "progressValue":
+        c["value"] = "${seekTarget >= 0 ? seekTarget : %s}" % pos   # the thumb shows the target meanwhile
+
+
+def seek(delta):
+    """Each press moves the target by delta at once; MA seeks once the presses stop."""
+    target = "${Math.max(0, Math.min(trackTotal - 2000, (seekTarget >= 0 ? seekTarget : %s) %+d))}" % (pos, delta)
+    return [
+        {"type": "SetValue", "componentId": "AudioPlayerRoot", "property": "seekTarget", "value": target},
+        {"type": "SetValue", "componentId": "slider", "property": "progressValue", "value": "${seekTarget}"},
+        {"type": "Sequential", "sequencer": "maSeekKeys", "commands": [
+            {"type": "Idle", "delay": 1200},
+            {"type": "SetValue", "componentId": "maSeek", "property": "text", "value": "${seekTarget}@${utcTime}"},
+            {"type": "Idle", "delay": 8000},
+            {"type": "SetValue", "componentId": "AudioPlayerRoot", "property": "seekTarget", "value": -1}]},
+    ]
+
+
 press = [
     {"type": "SendEvent", "arguments": ["Previous"], "when": "${remoteFocus == 0}"},
-    {"type": "SendEvent", "arguments": ["PlayPause"], "when": "${remoteFocus == 1}"},
+    {"type": "SetValue", "componentId": "playPauseToggleButtonId", "property": "checked",
+     "value": "${!videoPlaying}", "when": "${remoteFocus == 1}"},
+    {"type": "ControlMedia", "componentId": "videoPlayer", "command": "${videoPlaying ? 'pause' : 'play'}",
+     "when": "${remoteFocus == 1}"},
     {"type": "SendEvent", "arguments": ["Next"], "when": "${remoteFocus == 2}"},
     {"type": "SetValue", "componentId": "AudioPlayerRoot", "property": "lyricsVisible",
      "value": "${!lyricsVisible}", "when": "${remoteFocus == 3}"},
-    {"type": "ScrollToIndex", "componentId": "maLyrics", "index": "${lyricsIndex}", "align": "center",
-     "when": "${remoteFocus == 3 && lyricsVisible}"},
+    {"type": "Sequential", "sequencer": "maLyricsOpen", "when": "${remoteFocus == 3 && lyricsVisible}",
+     "commands": [{"type": "Idle", "delay": 150},
+                  {"type": "ScrollToIndex", "componentId": "maLyrics", "index": "${lyricsIndex}", "align": "center"}]},
 ]
 move = lambda expr: [{"type": "SetValue", "componentId": "AudioPlayerRoot", "property": "remoteFocus", "value": expr}]
 fdiag = {"type": "SendEvent", "arguments": ["KeyDiag", "${event.keyboard.code}", "${event.keyboard.key}", "focused"]}
