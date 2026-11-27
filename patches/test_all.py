@@ -50,6 +50,7 @@ for rnd in (1, 2):
         run(f"{W}/fix_lyrics_keep.py", T),
         run(f"{W}/fix_flow_end.py", T),
         run(f"{W}/fix_voice_next.py", T),
+        run(f"{W}/fix_lyrics_scroll.py", T),
     ]
     text = "".join(outs)
     if rnd == 2:
@@ -400,8 +401,10 @@ cmds = [c for d in r["directives"] if d["type"].endswith("ExecuteCommands") for 
 props = {c.get("property"): c.get("value") for c in cmds if c["type"] == "SetValue"}
 assert props.get("lyricsAvailable") is True and props.get("lyricsSynced") is True, props
 assert len(props["lyricsLines"]) == 4 and lyrics_calls == [PLAYER], (props, lyrics_calls)
-scroll = [c for c in cmds if c["type"] == "ScrollToIndex"]
-assert scroll and scroll[-1]["index"] == 3, scroll     # 140 s -> chorus repeated at 70 s (last line)
+bk = props["lyricsBuckets"]
+# lines start at 600, 5100, 8600, 69600 ms (400 ms lead)
+assert bk[0] == -1 and bk[3] == 0 and bk[20] == 0 and bk[21] == 1 and bk[35] == 2 and bk[279] == 3, bk[:5]
+assert len(bk) == 69600 // 250 + 40
 clock[0] += 1
 r = refresh("12500|true|-128000")
 assert not [c for d in r["directives"] for c in d.get("commands", []) if c.get("type") == "ScrollToIndex"]
@@ -484,6 +487,9 @@ clock[0] += 30                                           # screen closed
 r = intent("AMAZON.PreviousIntent")
 assert r.get("shouldEndSession") is True, r
 print("OK  voice next/previous keeps the screen open while it is live")
+_d3 = json.dumps(json.load(open(os.path.join(S, "apl_document.json"))))
+assert '"sequencer": "maScroll"' in _d3 and "lyricsBuckets[Math.floor((event.currentTime - trackOffset) / 250)]" in _d3
+print("OK  lyrics scroll runs on the screen (lookup table, own sequencer)")
 
 # ======================= non-APL device / ENABLE_APL=false ===================
 resp = launch(apl=False)
