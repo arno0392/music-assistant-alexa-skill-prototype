@@ -52,6 +52,7 @@ for rnd in (1, 2):
         run(f"{W}/fix_voice_next.py", T),
         run(f"{W}/fix_lyrics_scroll.py", T),
         run(f"{W}/fix_lyrics_header.py", T),
+        run(f"{W}/fix_apl_logo.py", T),
     ]
     text = "".join(outs)
     if rnd == 2:
@@ -495,6 +496,8 @@ print("OK  lyrics scroll runs on the screen (lookup table, own sequencer)")
 _d4 = json.dumps(json.load(open(os.path.join(S, "apl_document.json"))))
 assert '"id": "maLyricsTitle"' in _d4 and '"maxLines": 1' in _d4
 print("OK  lyrics panel shows title and artist on one line each")
+assert "brands.home-assistant.io/music_assistant/icon.png" in json.dumps(json.load(open(os.path.join(S, "apl_document.json"))))
+print("OK  Music Assistant logo in the header")
 
 # ======================= non-APL device / ENABLE_APL=false ===================
 resp = launch(apl=False)
