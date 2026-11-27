@@ -40,3 +40,4 @@ Scripts appliqués sur des copies des fichiers du conteneur (`/app/src/skill/…
 | `fix_meta_churn.py` | `lambda_function.py` | titre et pochette renvoyés à l'écran seulement quand ils changent |
 | `fix_refresh_loop.py` | `apl_document.json`, `util.py` | boucle de rafraîchissement autonome (1/s, se répète seule) : l'écran ne « meurt » plus si une réponse se perd |
 | `fix_play_audio_live.py` | `lambda_function.py` | « PlayAudio » pendant que l'écran joue : simple reprise, plus de redémarrage du titre |
+| `fix_fallback_live.py` | `lambda_function.py` | phrase non comprise pendant que l'écran joue : ignorée, l'écran reste ouvert |

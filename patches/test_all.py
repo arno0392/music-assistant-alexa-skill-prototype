@@ -58,6 +58,7 @@ for rnd in (1, 2):
         run(f"{W}/fix_meta_churn.py", T),
         run(f"{W}/fix_refresh_loop.py", T),
         run(f"{W}/fix_play_audio_live.py", T),
+        run(f"{W}/fix_fallback_live.py", T),
     ]
     text = "".join(outs)
     if rnd == 2:
@@ -565,6 +566,14 @@ clock[0] += 30                                          # screen closed: PlayAud
 r = intent("PlayAudio")
 assert any(d["type"].endswith("RenderDocument") for d in r.get("directives", [])), r
 print("OK  PlayAudio while the screen plays only resumes (no restart)")
+clock[0] += 1
+refresh("5000|true|0")
+r = intent("AMAZON.FallbackIntent")
+assert "shouldEndSession" not in r and "outputSpeech" not in r, r
+clock[0] += 30
+r = intent("AMAZON.FallbackIntent")
+assert r.get("shouldEndSession") is True, r
+print("OK  unrecognized utterance does not close the live screen")
 
 # ======================= non-APL device / ENABLE_APL=false ===================
 resp = launch(apl=False)
