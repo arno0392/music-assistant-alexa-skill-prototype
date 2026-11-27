@@ -67,7 +67,7 @@ src = src.rstrip("\n") + '''
 
 
 _last_intent_at = {}        # device_id -> time of the last voice (intent) request
-_SCREEN_FORWARD_DELAY = 4   # seconds before a pause/play seen on the screen goes to MA
+_SCREEN_FORWARD_DELAY = 6   # seconds before a pause/play seen on the screen goes to MA
 '''
 open(path, "w", encoding="utf-8").write(src)
 print("lambda_function (pause vocale): patch applique")

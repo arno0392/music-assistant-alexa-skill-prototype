@@ -36,3 +36,5 @@ Scripts appliqués sur des copies des fichiers du conteneur (`/app/src/skill/…
 | `fix_lyrics_header.py` | `apl_document.json`, `lambda_function.py` | mode paroles : titre et artiste en haut à gauche, alignés sur les marges de l'écran (toutes tailles), coupés sur une ligne |
 | `fix_apl_logo.py` | `apl_document.json` | logo Music Assistant blanc (vectoriel, net sur tous les écrans) en haut à droite |
 | `fix_voice_pause.py` | `lambda_function.py` | la pause faite par l'Echo pendant une commande vocale n'est plus transmise à MA (lecture figée après « Alexa, suivant ») |
+| `fix_voice_transport.py` | `apl_document.json`, `apl.py`, `lambda_function.py` | « Alexa, suivant / précédent » (traités par l'Echo sur la vidéo) renvoyés à MA : 2e source factice pour suivant, retour en arrière du flux pour précédent |
+| `fix_meta_churn.py` | `lambda_function.py` | titre et pochette renvoyés à l'écran seulement quand ils changent |

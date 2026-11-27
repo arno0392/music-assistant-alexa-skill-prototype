@@ -5,7 +5,7 @@
 set -eu
 
 BRANCH_URL="https://raw.githubusercontent.com/arno0392/music-assistant-alexa-skill-prototype/local-patches/patches"
-SCRIPTS="fix_meta fix_apl fix_apl_buttons fix_apl_refresh fix_apl_time fix_live_page fix_live_report fix_apl_ux fix_apl_seek fix_apl_pause fix_stream_key fix_apl_followups fix_apl_sequencer fix_seek_offset fix_time_binds fix_apl_background fix_apl_lyrics fix_root_id fix_time_precision fix_lyrics_keep fix_flow_end fix_voice_next fix_lyrics_scroll fix_lyrics_header fix_apl_logo fix_voice_pause"
+SCRIPTS="fix_meta fix_apl fix_apl_buttons fix_apl_refresh fix_apl_time fix_live_page fix_live_report fix_apl_ux fix_apl_seek fix_apl_pause fix_stream_key fix_apl_followups fix_apl_sequencer fix_seek_offset fix_time_binds fix_apl_background fix_apl_lyrics fix_root_id fix_time_precision fix_lyrics_keep fix_flow_end fix_voice_next fix_lyrics_scroll fix_lyrics_header fix_apl_logo fix_voice_pause fix_voice_transport fix_meta_churn"
 FILES="skill/util.py skill/apl.py skill/apl_document.json skill/lambda_function.py skill/ma_control.py shared_store.py music_assistant_api/ma_routes.py alexa_api/alexa_routes.py"
 
 [ -f docker-compose.yml ] || { echo "Lance ce script depuis le dossier du projet (docker-compose.yml)"; exit 1; }
@@ -54,6 +54,8 @@ $P/fix_lyrics_scroll.py "$NEW"
 $P/fix_lyrics_header.py "$NEW"
 $P/fix_apl_logo.py "$NEW"
 $P/fix_voice_pause.py "$NEW"
+$P/fix_voice_transport.py "$NEW"
+$P/fix_meta_churn.py "$NEW"
 
 for f in $FILES; do
     case "$f" in

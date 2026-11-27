@@ -54,6 +54,8 @@ for rnd in (1, 2):
         run(f"{W}/fix_lyrics_header.py", T),
         run(f"{W}/fix_apl_logo.py", T),
         run(f"{W}/fix_voice_pause.py", T),
+        run(f"{W}/fix_voice_transport.py", T),
+        run(f"{W}/fix_meta_churn.py", T),
     ]
     text = "".join(outs)
     if rnd == 2:
@@ -517,6 +519,39 @@ calls.clear()
 refresh("2200|false|0")                          # a real tap on pause, no voice
 assert calls == [("cmd", PLAYER, "pause")], calls
 print("OK  pause caused by a voice command is not forwarded to MA; a tap still is")
+
+# voice next / previous applied by the Echo to the Video
+resp = launch()
+doc = resp["directives"][0]["document"]
+assert doc["mainTemplate"]["items"][0]["audioNextSource"].endswith("?ma_voice_next=1")
+assert '"source": ["${audioSources}", "${audioNextSource}"]' in json.dumps(doc) and "VoiceNext" in json.dumps(doc)
+calls.clear(); refs.clear()
+user_event("VoiceNext")
+assert calls == [("cmd", PLAYER, "advance")], calls
+calls.clear()
+clock[0] += 10
+refresh("30000|true|0")
+clock[0] += 1
+refresh("31000|true|0")
+assert calls == [], calls
+clock[0] += 1
+refresh("31200|false|0")                                # "Alexa...": the Echo pauses while listening
+clock[0] += 1
+refresh("400|true|0")                                   # then restarts its stream
+# (the listening pause is dropped after its delay on the device: here threads run at once)
+assert [c for c in calls if c[2] == "previous"] == [("cmd", PLAYER, "previous")], calls
+clock[0] += 1
+refresh("1400|true|0"); refresh("200|true|0")           # handled once per screen
+assert [c for c in calls if c[2] == "previous"] == [("cmd", PLAYER, "previous")], calls
+print("OK  voice next (dummy second source) and voice previous (stream restarted) go to MA")
+
+# metadata sent to the screen only when it changes
+clock[0] += 5
+r1 = refresh("1500|true|0")
+clock[0] += 1
+r2 = refresh("2500|true|0")
+assert not any(c.get("componentId") == "Audio_PrimaryText" for d in r2["directives"] for c in d.get("commands", [])), r2
+print("OK  title/cover not resent at every refresh")
 
 # ======================= non-APL device / ENABLE_APL=false ===================
 resp = launch(apl=False)
