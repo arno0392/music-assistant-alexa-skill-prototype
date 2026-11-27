@@ -30,6 +30,10 @@ edits = [
             _seek_hint[player_id] = (seconds, _time.time(), _shown_item_id(player_id))
             ma_control.seek_player(player_id, seconds)
 '''),
+    ('    state["resent"] = 0\n',
+     '    state["resent"] = 0\n'
+     '    logger.info("Time sync %s: track %s (%s), MA at %.0fs/%.0fs", player_id, info["queue_item_id"],\n'
+     '                (info.get("title") or "")[:30], info.get("elapsed_ms", 0) / 1000, info.get("duration_ms", 0) / 1000)\n'),
     ("\n    return _apl_time_commands(info)\n",
      "\n    return _seek_time_commands(player_id, state, info, now) or _apl_time_commands(info)\n"),
     ('''    pos = _screen_pos.get(player_id)
