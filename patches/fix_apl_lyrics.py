@@ -1,6 +1,6 @@
 """PATCH: synchronized lyrics on the Echo Show screen.
 
-A lyrics button (speech bubble) next to the skip buttons, shown only when the
+A lyrics button (microphone) next to the skip buttons, shown only when the
 track has lyrics, swaps the cover/title for a lyrics panel. The current line
 is white, the others dimmed; the panel scrolls to keep the current line in
 view. Plain (unsynchronized) lyrics are shown as scrollable text.
@@ -138,14 +138,15 @@ else:
                  "scale": "best-fit", "opacity": "${lyricsVisible ? 1 : 0.6}"},
     })
 
-    # 4. icon: speech bubble with quotes
+    # 4. icon: microphone (Material Design "microphone-variant", as in Music Assistant)
     doc["graphics"]["maLyrics"] = {
         "type": "AVG", "version": "1.2", "width": 24, "height": 24,
         "items": [
             {"type": "path", "fill": "white",
-             "pathData": "M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"},
-            {"type": "path", "fill": "white",
-             "pathData": "M7.5 13h2l1-2V7.5H7v3.5h1.5zm5.5 0h2l1-2V7.5h-3.5v3.5H14z"},
+             "pathData": "M9,3A4,4 0 0,1 13,7H5A4,4 0 0,1 9,3M11.84,9.82L11,18H10V19A2,2 0 0,0 12,21"
+                         "A2,2 0 0,0 14,19V14A4,4 0 0,1 18,10H20L19,11L20,12H18A2,2 0 0,0 16,14V19"
+                         "A4,4 0 0,1 12,23A4,4 0 0,1 8,19V18H7L6.16,9.82C5.67,9.32 5.31,8.7 5.13,8"
+                         "H12.87C12.69,8.7 12.33,9.32 11.84,9.82Z"},
         ],
     }
     json.dump(doc, open(doc_path, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
