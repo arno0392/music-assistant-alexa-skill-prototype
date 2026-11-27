@@ -33,3 +33,4 @@ Scripts appliqués sur des copies des fichiers du conteneur (`/app/src/skill/…
 | `fix_flow_end.py` | `apl_document.json`, `ma_control.py`, `lambda_function.py` | flux terminé par MA entre deux titres (changement de fréquence d'échantillonnage) : le skill relance le titre suivant |
 | `fix_voice_next.py` | `lambda_function.py` | « Alexa, suivant / précédent » : la session (et l'écran) restent ouverts quand l'écran est affiché |
 | `fix_lyrics_scroll.py` | `apl_document.json`, `lambda_function.py` | défilement des paroles calculé par l'écran (table par tranches de 250 ms, séquenceur dédié) : ligne en cours toujours centrée |
+| `fix_lyrics_header.py` | `apl_document.json`, `lambda_function.py` | titre et artiste en petit en haut à gauche des paroles, coupés sur une ligne |

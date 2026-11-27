@@ -51,6 +51,7 @@ for rnd in (1, 2):
         run(f"{W}/fix_flow_end.py", T),
         run(f"{W}/fix_voice_next.py", T),
         run(f"{W}/fix_lyrics_scroll.py", T),
+        run(f"{W}/fix_lyrics_header.py", T),
     ]
     text = "".join(outs)
     if rnd == 2:
@@ -405,6 +406,7 @@ bk = props["lyricsBuckets"]
 # lines start at 600, 5100, 8600, 69600 ms (400 ms lead)
 assert bk[0] == -1 and bk[3] == 0 and bk[20] == 0 and bk[21] == 1 and bk[35] == 2 and bk[279] == 3, bk[:5]
 assert len(bk) == 69600 // 250 + 40
+assert "lyricsTitle" in props and "lyricsArtist" in props, props
 clock[0] += 1
 r = refresh("12500|true|-128000")
 assert not [c for d in r["directives"] for c in d.get("commands", []) if c.get("type") == "ScrollToIndex"]
@@ -490,6 +492,9 @@ print("OK  voice next/previous keeps the screen open while it is live")
 _d3 = json.dumps(json.load(open(os.path.join(S, "apl_document.json"))))
 assert '"sequencer": "maScroll"' in _d3 and "lyricsBuckets[Math.floor((event.currentTime - trackOffset) / 250)]" in _d3
 print("OK  lyrics scroll runs on the screen (lookup table, own sequencer)")
+_d4 = json.dumps(json.load(open(os.path.join(S, "apl_document.json"))))
+assert '"id": "maLyricsTitle"' in _d4 and '"maxLines": 1' in _d4
+print("OK  lyrics panel shows title and artist on one line each")
 
 # ======================= non-APL device / ENABLE_APL=false ===================
 resp = launch(apl=False)
