@@ -59,6 +59,7 @@ for rnd in (1, 2):
         run(f"{W}/fix_refresh_loop.py", T),
         run(f"{W}/fix_play_audio_live.py", T),
         run(f"{W}/fix_fallback_live.py", T),
+        run(f"{W}/fix_custom_skip_intents.py", T),
     ]
     text = "".join(outs)
     if rnd == 2:
@@ -574,6 +575,10 @@ clock[0] += 30
 r = intent("AMAZON.FallbackIntent")
 assert r.get("shouldEndSession") is True, r
 print("OK  unrecognized utterance does not close the live screen")
+calls.clear()
+intent("MaPreviousIntent"); intent("MaNextIntent")
+assert [c[2] for c in calls] == ["previous", "next"], calls
+print("OK  custom MaNextIntent / MaPreviousIntent handled like the built-in ones")
 
 # ======================= non-APL device / ENABLE_APL=false ===================
 resp = launch(apl=False)

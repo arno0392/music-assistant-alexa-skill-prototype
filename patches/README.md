@@ -41,3 +41,4 @@ Scripts appliqués sur des copies des fichiers du conteneur (`/app/src/skill/…
 | `fix_refresh_loop.py` | `apl_document.json`, `util.py` | boucle de rafraîchissement autonome (1/s, se répète seule) : l'écran ne « meurt » plus si une réponse se perd |
 | `fix_play_audio_live.py` | `lambda_function.py` | « PlayAudio » pendant que l'écran joue : simple reprise, plus de redémarrage du titre |
 | `fix_fallback_live.py` | `lambda_function.py` | phrase non comprise pendant que l'écran joue : ignorée, l'écran reste ouvert |
+| `fix_custom_skip_intents.py` | `lambda_function.py` | intents perso MaNextIntent / MaPreviousIntent (phrases en plus : « chanson précédente »…) traités comme suivant/précédent |
