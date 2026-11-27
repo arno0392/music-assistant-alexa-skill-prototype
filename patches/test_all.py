@@ -47,6 +47,7 @@ for rnd in (1, 2):
         run(f"{W}/fix_apl_lyrics.py", T),
         run(f"{W}/fix_root_id.py", T),
         run(f"{W}/fix_time_precision.py", T),
+        run(f"{W}/fix_lyrics_keep.py", T),
     ]
     text = "".join(outs)
     if rnd == 2:
@@ -435,6 +436,25 @@ assert o and o[0]["value"] == 180000, o     # TB starts where TA (180 s) ends
 r = refresh("183500|true|0|%d" % int((clock[0] - 3600) * 1000))   # implausible device clock: ignored
 assert shared_store.get_report(PLAYER)["observedAt"] == clock[0]
 print("OK  exact offsets: 0 at stream start, previous offset + duration on a natural track change; device clock")
+
+# lyrics panel kept open across a new screen
+ma_control.get_lyrics = lambda p: {"queue_item_id": lf._shown_item_id(p), "lyrics": None, "lrc": "[00:01.00]A\n[00:03.00]B"}
+clock[0] += 1
+refresh("184000|true|180000|%d|1" % int(clock[0] * 1000))      # panel open on the screen
+lf._now_playing_state.pop(PLAYER, None); lf._screen_restarted(PLAYER)   # skip: new screen
+now_playing["v"] = dict(now_playing["v"], queue_item_id="qc", title="TC", elapsed_ms=300, duration_ms=150000)
+clock[0] += 5
+r = refresh("300|true|0")                                      # new screen: report without the 5th field
+vis = [c["value"] for d in r["directives"] for c in d.get("commands", []) if c.get("property") == "lyricsVisible"]
+assert vis == [True], vis
+clock[0] += 1
+refresh("1300|true|0|%d|0" % int(clock[0] * 1000))             # closed by the user
+lf._now_playing_state.pop(PLAYER, None); lf._screen_restarted(PLAYER)
+now_playing["v"] = dict(now_playing["v"], queue_item_id="qd", title="TD")
+clock[0] += 5
+r = refresh("300|true|0")
+assert not [c for d in r["directives"] for c in d.get("commands", []) if c.get("property") == "lyricsVisible" and c["value"]]
+print("OK  lyrics panel reopened on a new screen when it was open, not when it was closed")
 
 # ======================= non-APL device / ENABLE_APL=false ===================
 resp = launch(apl=False)
