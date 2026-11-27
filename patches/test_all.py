@@ -48,6 +48,7 @@ for rnd in (1, 2):
         run(f"{W}/fix_root_id.py", T),
         run(f"{W}/fix_time_precision.py", T),
         run(f"{W}/fix_lyrics_keep.py", T),
+        run(f"{W}/fix_flow_end.py", T),
     ]
     text = "".join(outs)
     if rnd == 2:
@@ -455,6 +456,23 @@ clock[0] += 5
 r = refresh("300|true|0")
 assert not [c for d in r["directives"] for c in d.get("commands", []) if c.get("property") == "lyricsVisible" and c["value"]]
 print("OK  lyrics panel reopened on a new screen when it was open, not when it was closed")
+
+# flow stream ended by MA between two tracks
+lf._END_GRACE = 0
+calls.clear(); refs.clear()
+queue_state["v"] = "playing"
+clock[0] += 6
+refresh("150000|end|0|%d|0" % int(clock[0] * 1000))
+assert calls == [("cmd", PLAYER, "advance")] and refs == [lf._shown_item_id(PLAYER)], (calls, refs)
+clock[0] += 1
+refresh("150000|end|0|%d|0" % int(clock[0] * 1000))            # same end reported again
+assert calls == [("cmd", PLAYER, "advance")], calls
+lf._screen_restarted(PLAYER); calls.clear()
+queue_state["v"] = "idle"
+clock[0] += 6
+refresh("150000|end|0|%d|0" % int(clock[0] * 1000))
+assert calls == [], calls                                       # MA stopped: nothing to continue
+print("OK  flow stream ended while MA plays: next track started once; not when MA stopped; never a pause")
 
 # ======================= non-APL device / ENABLE_APL=false ===================
 resp = launch(apl=False)
