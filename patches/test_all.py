@@ -53,6 +53,7 @@ for rnd in (1, 2):
         run(f"{W}/fix_lyrics_scroll.py", T),
         run(f"{W}/fix_lyrics_header.py", T),
         run(f"{W}/fix_apl_logo.py", T),
+        run(f"{W}/fix_voice_pause.py", T),
     ]
     text = "".join(outs)
     if rnd == 2:
@@ -87,6 +88,7 @@ ma_control.send_player_command = lambda p, c, ref_item_id=None: refs.append(ref_
 queue_state = {"v": "playing"}
 ma_control.get_queue_state = lambda p: queue_state["v"]
 ma_control.seek_player = lambda p, s: calls.append(("seek", p, s)) or True
+lf._SCREEN_FORWARD_DELAY = 0
 now_playing = {"v": None}
 ma_control.get_now_playing = lambda p: now_playing["v"]
 clock = [1_800_000_000.0]
@@ -499,6 +501,22 @@ print("OK  lyrics panel shows title and artist on one line each")
 _d5 = json.load(open(os.path.join(S, "apl_document.json")))
 assert "maLogo" in _d5["graphics"] and '"id": "maLogo"' in json.dumps(_d5) and "brands.home-assistant" not in json.dumps(_d5)
 print("OK  white vector Music Assistant logo, top right")
+
+calls.clear()
+queue_state["v"] = "playing"
+clock[0] += 10
+refresh("2000|true|0")
+clock[0] += 1
+intent("AMAZON.NextIntent")                       # "Alexa, suivant": the Echo pauses the Video
+calls.clear()
+refresh("2100|false|0")
+assert calls == [], calls                         # not forwarded as a pause
+clock[0] += 10
+refresh("2100|true|0")
+calls.clear()
+refresh("2200|false|0")                          # a real tap on pause, no voice
+assert calls == [("cmd", PLAYER, "pause")], calls
+print("OK  pause caused by a voice command is not forwarded to MA; a tap still is")
 
 # ======================= non-APL device / ENABLE_APL=false ===================
 resp = launch(apl=False)
