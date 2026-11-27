@@ -37,7 +37,10 @@ def kinds(resp):
     for d in resp.get("directives", []):
         k = d["type"].split(".")[-1]
         if "commands" in d:
-            k += "[" + ",".join(c.get("command") or c.get("property") or c["type"] for c in d["commands"]) + "]"
+            cmds = d["commands"]
+            if len(cmds) == 1 and cmds[0].get("sequencer") == "maRefresh":
+                cmds = cmds[0]["commands"]
+            k += "[" + ",".join(c.get("command") or c.get("property") or c["type"] for c in cmds) + "]"
         out.append(k)
     return out
 

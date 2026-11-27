@@ -22,3 +22,4 @@ Scripts appliqués sur des copies des fichiers du conteneur (`/app/src/skill/…
 | `fix_apl_pause.py` | `apl.py` | pause depuis Music Assistant : autoplay coupé aussi sur les contrôles (introuvables après fix_apl_buttons.py) |
 | `fix_stream_key.py` | `shared_store.py`, `ma_routes.py`, `alexa_routes.py`, `lambda_function.py` | flux comparés par identité (rapport de position "current" correct) + titre frais avant réaffichage |
 | `fix_apl_followups.py` | `apl_document.json`, `ma_control.py`, `lambda_function.py` | temps renvoyé ~6 s après puis recalé si écart > 3 s ; pause/lecture de l'écran renvoyées à MA ; écran gardé 10 min en pause (idleTimeout) ; précédent calculé depuis le titre affiché |
+| `fix_apl_sequencer.py` | `apl_document.json`, `util.py`, `ma_routes.py` | boucle de rafraîchissement sur son propre séquenceur APL (un appui sur l'écran ne la coupe plus) ; logs push-url/control avec pageLive |

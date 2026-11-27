@@ -40,6 +40,7 @@ for rnd in (1, 2):
         run(f"{W}/fix_apl_pause.py", f"{S}/apl.py"),
         run(f"{W}/fix_stream_key.py", T),
         run(f"{W}/fix_apl_followups.py", T),
+        run(f"{W}/fix_apl_sequencer.py", T),
     ]
     text = "".join(outs)
     if rnd == 2:
@@ -124,7 +125,10 @@ def kinds(resp):
     for d in resp.get("directives", []):
         k = d["type"].split(".")[-1]
         if "commands" in d:
-            k += "[" + ",".join(c.get("command") or c.get("property") or c["type"] for c in d["commands"]) + "]"
+            cmds = d["commands"]
+            if len(cmds) == 1 and cmds[0].get("sequencer") == "maRefresh":
+                cmds = cmds[0]["commands"]
+            k += "[" + ",".join(c.get("command") or c.get("property") or c["type"] for c in cmds) + "]"
         out.append(k)
     return out
 
@@ -334,6 +338,12 @@ refs.clear(); calls.clear()
 user_event("Previous")
 assert calls == [("cmd", PLAYER, "previous")] and refs == ["q9"], (calls, refs)
 print("OK  previous computed from the track shown on the screen")
+doc = json.dumps(resp["directives"][0]["document"])
+assert doc.count('"sequencer": "maRefresh"') == 1
+r = refresh("30000|true|-102500")
+last = [d for d in r["directives"] if d["type"].endswith("ExecuteCommands")][-1]
+assert last["commands"][0]["sequencer"] == "maRefresh", last
+print("OK  refresh loop runs on its own sequencer (not stopped by touches)")
 
 # ======================= non-APL device / ENABLE_APL=false ===================
 resp = launch(apl=False)
