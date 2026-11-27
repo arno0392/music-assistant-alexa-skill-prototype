@@ -52,4 +52,4 @@ Scripts appliqués sur des copies des fichiers du conteneur (`/app/src/skill/…
 | `fix_previous_guard.py` | `lambda_function.py` | pas de « précédent vocal » détecté dans les 5 premières secondes d’un nouvel écran (un dernier rapport de l’ancienne page annulait le « suivant » sur une TV) |
 | `fix_late_screen.py` | `ma_routes.py`, `lambda_function.py` | écran ouvert en retard (appli Alexa de la TV fermée, Echo en veille) : le temps part de 0 avec la musique, plus du temps déjà compté par MA |
 | `fix_seek_start.py` | `lambda_function.py` | ramener la barre au tout début du titre relance le morceau (un saut à 0 s ne faisait rien dans MA) |
-| `fix_lyrics_tv.py` | `lambda_function.py` | paroles à l’heure sur une TV (avance `LYRICS_LEAD_MS_TV`, 0 par défaut, au lieu des 400 ms de l’Echo) ; panneau des paroles gardé ouvert après « suivant » ou un saut |
+| `fix_lyrics_tv.py` | `lambda_function.py` | paroles à l’heure sur une TV (avance `LYRICS_LEAD_MS_TV`, 300 ms par défaut ; Echo : `LYRICS_LEAD_MS`, 600 ms par défaut) ; panneau des paroles gardé ouvert après « suivant » ou un saut |

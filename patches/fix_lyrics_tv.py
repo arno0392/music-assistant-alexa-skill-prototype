@@ -1,8 +1,8 @@
 """PATCH: lyrics on a TV, and lyrics kept open after "next".
 
-- Lines are lit LYRICS_LEAD_MS (400) early to make up for an Echo's decoding delay;
+- Lines are lit LYRICS_LEAD_MS (600) early to make up for an Echo's decoding delay;
   a TV plays the stream without it, so its lines came slightly early. A TV now uses
-  LYRICS_LEAD_MS_TV (default 0).
+  LYRICS_LEAD_MS_TV (default 300).
 - The open/closed state of the lyrics panel is taken from the screen only once the
   lyrics were shown on it: a new screen (next track, seek) first reports a closed
   panel while its lyrics are still loading, which forgot that the panel was open.
@@ -27,13 +27,13 @@ edits = [
                 _lyrics_open[player_id] = parts[4].strip() == '1\''''),
     ('''def _parse_lyrics(lyrics, lrc):''', '''def _parse_lyrics(lyrics, lrc, lead=None):'''),
     ('''            try:
-                lead = int(os.environ.get("LYRICS_LEAD_MS", "400"))
+                lead = int(os.environ.get("LYRICS_LEAD_MS", "600"))
             except ValueError:
-                lead = 400''', '''            if lead is None:
+                lead = 600''', '''            if lead is None:
                 try:
-                    lead = int(os.environ.get("LYRICS_LEAD_MS", "400"))
+                    lead = int(os.environ.get("LYRICS_LEAD_MS", "600"))
                 except ValueError:
-                    lead = 400'''),
+                    lead = 600'''),
     ('''            st["lines"], st["synced"] = _parse_lyrics(found.get("lyrics"), found.get("lrc"))''',
      '''            st["lines"], st["synced"] = _parse_lyrics(found.get("lyrics"), found.get("lrc"),
                                                       lead=_lyrics_lead(player_id))'''),
@@ -53,9 +53,9 @@ def _lyrics_lead(player_id):
     if not _player_on_tv.get(player_id):
         return None
     try:
-        return int(os.environ.get("LYRICS_LEAD_MS_TV", "0"))
+        return int(os.environ.get("LYRICS_LEAD_MS_TV", "300"))
     except ValueError:
-        return 0
+        return 300
 
 
 class ScreenModeInterceptor(AbstractRequestInterceptor):

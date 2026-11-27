@@ -248,11 +248,11 @@ def _parse_lyrics(lyrics, lrc):
         timed.sort(key=lambda x: x[0])
         if timed:
             # lines lit slightly early: what the Echo reports is decoded a bit before it is heard
-            # and a reader needs the line a moment before it is sung (LYRICS_LEAD_MS, default 400)
+            # and a reader needs the line a moment before it is sung (LYRICS_LEAD_MS, default 600)
             try:
-                lead = int(os.environ.get("LYRICS_LEAD_MS", "400"))
+                lead = int(os.environ.get("LYRICS_LEAD_MS", "600"))
             except ValueError:
-                lead = 400
+                lead = 600
             lines = []
             for i, (start, text) in enumerate(timed[:_LYRICS_MAX_LINES]):
                 end = timed[i + 1][0] if i + 1 < len(timed) else 10 ** 9
