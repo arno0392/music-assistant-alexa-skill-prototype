@@ -30,13 +30,30 @@ doc["graphics"]["maLogo"] = {
          "pathData": "M42,138 V212 M76,138 V212 M110,138 V212 M150,212 L174,138 M192,138 L216,212"},
     ],
 }
-root = doc["layouts"]["AudioPlayer"]["item"][0]
-items = root["items"]
-pos = next(i for i, c in enumerate(items) if c.get("type") == "AlexaHeader") + 1
-items.insert(pos, {
-    "type": "VectorGraphic", "id": "maLogo", "source": "maLogo",
-    "position": "absolute", "top": "24dp", "right": "@marginHorizontal",
-    "width": SIZE, "height": SIZE, "scale": "best-fit", "opacity": 0.85,
-})
+logo = {"type": "VectorGraphic", "id": "maLogo", "source": "maLogo",
+        "width": SIZE, "height": SIZE, "scale": "best-fit", "opacity": 0.85}
+bars = []
+
+
+def find_bar(x):
+    if isinstance(x, dict):
+        if x.get("id") == "maTopBar":
+            bars.append(x)
+        for v in x.values():
+            find_bar(v)
+    elif isinstance(x, list):
+        for v in x:
+            find_bar(v)
+
+
+find_bar(doc)
+if bars:
+    bars[0]["items"].append(logo)          # right end of the top bar
+else:
+    root = doc["layouts"]["AudioPlayer"]["item"][0]
+    items = root["items"]
+    pos = next(i for i, c in enumerate(items) if c.get("type") == "AlexaHeader") + 1
+    logo.update({"position": "absolute", "top": "24dp", "right": "@marginHorizontal"})
+    items.insert(pos, logo)
 json.dump(doc, open(path, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
 print("apl_document (logo): patch applique")

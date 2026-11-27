@@ -1,8 +1,8 @@
 """PATCH: title and artist above the lyrics.
 
-While the lyrics are shown, the cover/title row is hidden: the lyrics panel
-now starts with the track title and artist, small, top left, on one line
-each (cut with an ellipsis when too long).
+While the lyrics are shown, the cover/title row is hidden: the track title
+and artist are shown small, top left (aligned with the screen margins, any
+screen size), on one line each (cut with an ellipsis when too long).
 
 Requires fix_lyrics_scroll.py.
 usage: python3 fix_lyrics_header.py SRC_DIR
@@ -40,18 +40,35 @@ else:
     assert seq.get("id") == "maLyrics"
     seq["height"] = "1dp"
     seq["grow"] = 1
-    panel["items"].insert(0, {
+    # top bar, aligned with the screen margins: title/artist on the left (lyrics mode only),
+    # room on the right for the logo (fix_apl_logo.py puts it in this bar)
+    items = root["items"]
+    pos = next(i for i, c in enumerate(items) if c.get("type") == "AlexaHeader") + 1
+    items.insert(pos, {
         "type": "Container",
-        "width": "100%",
-        "paddingBottom": "8dp",
-        "items": [
-            {"type": "Text", "id": "maLyricsTitle", "text": "${lyricsTitle}", "width": "100%",
-             "maxLines": 1, "fontSize": "20dp", "fontWeight": "bold", "textAlign": "left",
-             "color": "#FFFFFF"},
-            {"type": "Text", "id": "maLyricsArtist", "text": "${lyricsArtist}", "width": "100%",
-             "maxLines": 1, "fontSize": "16dp", "textAlign": "left", "color": "#FFFFFFB3",
-             "display": "${lyricsArtist ? 'normal' : 'none'}"},
-        ],
+        "id": "maTopBar",
+        "position": "absolute",
+        "top": "24dp",
+        "left": "@marginHorizontal",
+        "right": "@marginHorizontal",
+        "direction": "row",
+        "alignItems": "start",
+        "items": [{
+            "type": "Container",
+            "width": "1dp",
+            "grow": 1,
+            "shrink": 1,
+            "paddingRight": "16dp",
+            "display": "${lyricsVisible ? 'normal' : 'invisible'}",
+            "items": [
+                {"type": "Text", "id": "maLyricsTitle", "text": "${lyricsTitle}", "width": "100%",
+                 "maxLines": 1, "fontSize": "20dp", "fontWeight": "bold", "textAlign": "left",
+                 "color": "#FFFFFF"},
+                {"type": "Text", "id": "maLyricsArtist", "text": "${lyricsArtist}", "width": "100%",
+                 "maxLines": 1, "fontSize": "16dp", "textAlign": "left", "color": "#FFFFFFB3",
+                 "display": "${lyricsArtist ? 'normal' : 'none'}"},
+            ],
+        }],
     })
     json.dump(doc, open(doc_path, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
     print("apl_document (titre paroles): patch applique")
