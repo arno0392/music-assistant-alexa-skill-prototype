@@ -41,6 +41,7 @@ for rnd in (1, 2):
         run(f"{W}/fix_stream_key.py", T),
         run(f"{W}/fix_apl_followups.py", T),
         run(f"{W}/fix_apl_sequencer.py", T),
+        run(f"{W}/fix_seek_offset.py", T),
     ]
     text = "".join(outs)
     if rnd == 2:
@@ -344,6 +345,21 @@ r = refresh("30000|true|-102500")
 last = [d for d in r["directives"] if d["type"].endswith("ExecuteCommands")][-1]
 assert last["commands"][0]["sequencer"] == "maRefresh", last
 print("OK  refresh loop runs on its own sequencer (not stopped by touches)")
+
+calls.clear()
+clock[0] += 5
+refresh("31000|true|-102500", seek="130000@31000")
+assert calls == [("seek", PLAYER, 130.0)], calls
+lf._now_playing_state.pop(PLAYER, None)       # stream restarted at 130 s: screen re-rendered
+lf._screen_restarted(PLAYER)
+now_playing["v"] = dict(now_playing["v"], elapsed_ms=0)   # MA not caught up yet
+clock[0] += 1
+cmds = [c for d in refresh("500|true|0")["directives"] if d["type"].endswith("ExecuteCommands")
+        for c in d["commands"] if c.get("property") == "trackOffset"]
+assert cmds and cmds[0]["value"] == -130000, cmds
+clock[0] += 6
+assert not any("trackTotal" in x for x in kinds(refresh("6500|true|-130000"))), "exact offset kept"
+print("OK  seek from the screen: offset set from the requested position, not from MA")
 
 # ======================= non-APL device / ENABLE_APL=false ===================
 resp = launch(apl=False)
