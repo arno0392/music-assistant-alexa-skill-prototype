@@ -57,6 +57,7 @@ for rnd in (1, 2):
         run(f"{W}/fix_voice_transport.py", T),
         run(f"{W}/fix_meta_churn.py", T),
         run(f"{W}/fix_refresh_loop.py", T),
+        run(f"{W}/fix_play_audio_live.py", T),
     ]
     text = "".join(outs)
     if rnd == 2:
@@ -556,6 +557,14 @@ _d6 = json.load(open(os.path.join(S, "apl_document.json")))
 _loop = [c for c in _d6["layouts"]["AudioPlayer"]["item"][0]["onMount"] if c.get("sequencer") == "maRefresh"]
 assert _loop and _loop[0]["repeatCount"] == 100000 and _loop[0]["commands"][0]["delay"] == 1000, _loop
 print("OK  refresh loop repeats by itself; the skill no longer chains refreshes")
+clock[0] += 1
+refresh("5000|true|0")
+r = intent("PlayAudio")
+assert [d["type"].split(".")[-1] for d in r.get("directives", [])] == ["ExecuteCommands"] and "shouldEndSession" not in r, r
+clock[0] += 30                                          # screen closed: PlayAudio starts playback as before
+r = intent("PlayAudio")
+assert any(d["type"].endswith("RenderDocument") for d in r.get("directives", [])), r
+print("OK  PlayAudio while the screen plays only resumes (no restart)")
 
 # ======================= non-APL device / ENABLE_APL=false ===================
 resp = launch(apl=False)

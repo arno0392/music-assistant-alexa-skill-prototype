@@ -39,3 +39,4 @@ Scripts appliqués sur des copies des fichiers du conteneur (`/app/src/skill/…
 | `fix_voice_transport.py` | `apl_document.json`, `apl.py`, `lambda_function.py` | « Alexa, suivant / précédent » (traités par l'Echo sur la vidéo) renvoyés à MA : 2e source factice pour suivant, retour en arrière du flux pour précédent |
 | `fix_meta_churn.py` | `lambda_function.py` | titre et pochette renvoyés à l'écran seulement quand ils changent |
 | `fix_refresh_loop.py` | `apl_document.json`, `util.py` | boucle de rafraîchissement autonome (1/s, se répète seule) : l'écran ne « meurt » plus si une réponse se perd |
+| `fix_play_audio_live.py` | `lambda_function.py` | « PlayAudio » pendant que l'écran joue : simple reprise, plus de redémarrage du titre |
