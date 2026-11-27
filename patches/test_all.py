@@ -43,6 +43,7 @@ for rnd in (1, 2):
         run(f"{W}/fix_apl_sequencer.py", T),
         run(f"{W}/fix_seek_offset.py", T),
         run(f"{W}/fix_time_binds.py", T),
+        run(f"{W}/fix_apl_background.py", T),
     ]
     text = "".join(outs)
     if rnd == 2:
@@ -374,6 +375,8 @@ assert {"trackOffset", "pendingElapsed", "needsResync"} <= {b["name"] for b in _
 _src = open(os.path.join(S, "lambda_function.py")).read()
 assert not re.search(r'"MaTimeRoot",\s*"property": "(trackOffset|pendingElapsed|needsResync)"', _src)
 print("OK  time binds live on the Video and the skill writes them there")
+assert '"backgroundBlur": true' in json.dumps(_doc) and '"colorOverlay": true' in json.dumps(_doc)
+print("OK  background: blurred cover with colour overlay")
 
 # ======================= non-APL device / ENABLE_APL=false ===================
 resp = launch(apl=False)
