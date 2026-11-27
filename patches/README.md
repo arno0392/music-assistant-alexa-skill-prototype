@@ -1,5 +1,11 @@
 # Correctifs locaux (skill Alexa Music Assistant)
 
+**Méthode recommandée** : depuis le dossier du projet, `sh patches/rebuild.sh`.
+Le script télécharge tous les scripts ci-dessous, extrait les fichiers **d'origine** de l'image
+(`docker run --entrypoint cat`), applique les correctifs dans l'ordre, vérifie la syntaxe,
+puis remplace `patches/src` (l'ancienne version est gardée dans `patches/src.old`).
+Tests : `test_all.py` (scénarios MA 2.10 / 2.11 / sans écran) et `test_http.py` (application réelle).
+
 Scripts appliqués sur des copies des fichiers du conteneur (`/app/src/skill/…`), montées ensuite en lecture seule.
 
 | Script | Fichiers | Effet |
