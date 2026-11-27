@@ -61,6 +61,7 @@ for rnd in (1, 2):
         run(f"{W}/fix_fallback_live.py", T),
         run(f"{W}/fix_custom_skip_intents.py", T),
         run(f"{W}/fix_stream_ran_out.py", T),
+        run(f"{W}/fix_multi_player.py", T),
     ]
     text = "".join(outs)
     if rnd == 2:
@@ -604,6 +605,25 @@ refresh("60000|true|0"); clock[0] += 3
 refresh("60100|false|0")                          # a real pause mid-track
 assert calls == [("cmd", PLAYER, "pause")], calls
 print("OK  stream run dry at the end of a track: next track; a mid-track pause stays a pause")
+
+# several Echos: one "now playing" per MA player
+lf.device_mapping.get_player_for_device = lambda d: {"d": PLAYER, "d2": "pl_b"}.get(d)
+push(H + "sA/Echo de la Cuisine/iA/Echo de la Cuisine.flac", title="Titre cuisine", playerId=PLAYER, canSkipSpeech=True)
+push(H + "sB/Echo de Nina/iB/Echo de Nina.flac", title="Titre Nina", playerId="pl_b", canSkipSpeech=True)
+clock[0] += 5
+refresh("3000|true|0")                                       # the kitchen screen refreshes
+assert util.data.info["primaryText"] == "Titre cuisine", util.data.info["primaryText"]
+ev = envelope({"type": "LaunchRequest"}, apl=False)
+ev["context"]["System"]["device"]["deviceId"] = "d2"       # Nina's Echo (no screen) launches
+r = invoke(ev)
+play = [d for d in r["directives"] if d["type"] == "AudioPlayer.Play"][0]
+assert "Echo%20de%20Nina" in play["audioItem"]["stream"]["url"], play["audioItem"]["stream"]["url"]
+shared_store.set_request_player(PLAYER)
+assert shared_store._store["title"] == "Titre cuisine"
+shared_store.set_request_player(None)
+assert "Nina" in shared_store._store["streamUrl"]                 # no player: the latest stream
+lf.device_mapping.get_player_for_device = lambda d: PLAYER if d == "d" else None
+print("OK  several Echos: each player keeps its own stream and title")
 
 # ======================= non-APL device / ENABLE_APL=false ===================
 resp = launch(apl=False)
