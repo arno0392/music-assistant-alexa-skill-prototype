@@ -56,6 +56,7 @@ for rnd in (1, 2):
         run(f"{W}/fix_voice_pause.py", T),
         run(f"{W}/fix_voice_transport.py", T),
         run(f"{W}/fix_meta_churn.py", T),
+        run(f"{W}/fix_refresh_loop.py", T),
     ]
     text = "".join(outs)
     if rnd == 2:
@@ -178,7 +179,7 @@ now_playing["v"] = {"queue_item_id": "q1", "title": "T1", "artist": "A", "album"
 resp = refresh()
 k = kinds(resp)
 assert any("trackTotal" in x and "totalValue" in x for x in k), k
-assert k[-1] == "ExecuteCommands[Idle,SendEvent]", k
+assert not any("SendEvent" in x for x in k), k     # the screen loop refreshes by itself
 print("OK  first refresh after launch: per-track time sent, refresh chain kept last")
 clock[0] += 5
 resp = refresh()
@@ -292,7 +293,7 @@ print("OK  screen closed: pageLive false (MA falls back to voice), activity not 
 # unmapped device: no crash, nothing claimed
 lf.device_mapping.get_player_for_device = lambda d: None
 resp = refresh()
-assert kinds(resp)[-1] == "ExecuteCommands[Idle,SendEvent]", kinds(resp)
+assert not any("SendEvent" in x for x in kinds(resp)), kinds(resp)
 lf.device_mapping.get_player_for_device = lambda d: PLAYER if d == "d" else None
 print("OK  unmapped device: refresh still works")
 
@@ -357,8 +358,7 @@ print("OK  previous computed from the track shown on the screen")
 doc = json.dumps(resp["directives"][0]["document"])
 assert doc.count('"sequencer": "maRefresh"') == 1
 r = refresh("30000|true|-102500")
-last = [d for d in r["directives"] if d["type"].endswith("ExecuteCommands")][-1]
-assert last["commands"][0]["sequencer"] == "maRefresh", last
+assert all(c.get("sequencer") != "MAIN" for d in r.get("directives", []) for c in d.get("commands", []))
 print("OK  refresh loop runs on its own sequencer (not stopped by touches)")
 
 calls.clear()
@@ -403,7 +403,7 @@ assert lf._parse_lyrics(None, None) == ([], False)
 clock[0] += 5
 lf._lyrics_state.clear()
 r = refresh("12000|true|-128000")          # screen at 140 s of the track
-cmds = [c for d in r["directives"] if d["type"].endswith("ExecuteCommands") for c in d["commands"]]
+cmds = [c for d in r.get("directives", []) if d["type"].endswith("ExecuteCommands") for c in d["commands"]]
 props = {c.get("property"): c.get("value") for c in cmds if c["type"] == "SetValue"}
 assert props.get("lyricsAvailable") is True and props.get("lyricsSynced") is True, props
 assert len(props["lyricsLines"]) == 4 and lyrics_calls == [PLAYER], (props, lyrics_calls)
@@ -414,24 +414,24 @@ assert len(bk) == 69600 // 250 + 40
 assert "lyricsTitle" in props and "lyricsArtist" in props, props
 clock[0] += 1
 r = refresh("12500|true|-128000")
-assert not [c for d in r["directives"] for c in d.get("commands", []) if c.get("type") == "ScrollToIndex"]
+assert not [c for d in r.get("directives", []) for c in d.get("commands", []) if c.get("type") == "ScrollToIndex"]
 assert lyrics_calls == [PLAYER], "lyrics fetched once per track"
 lf._screen_restarted(PLAYER)                # new screen: lyrics sent again
 clock[0] += 1
 r = refresh("1000|true|-128000")
-assert any(c.get("property") == "lyricsLines" for d in r["directives"] for c in d.get("commands", []))
+assert any(c.get("property") == "lyricsLines" for d in r.get("directives", []) for c in d.get("commands", []))
 _d2 = json.dumps(json.load(open(os.path.join(S, "apl_document.json"))))
 for k in ("maLyricsPanel", "maLyricsButton", '"maLyrics"', "trackPos", "Array.range(200)"):
     assert k in _d2, k
 print("OK  lyrics: LRC parsed, sent once per track, scrolled to the current line, resent on a new screen")
 _all = open(os.path.join(S, "lambda_function.py")).read() + _d2
 assert '"componentId": "MaTimeRoot"' not in _all and '"componentId": "AudioPlayerRoot"' in _all
-assert all(c.get("componentId") != "MaTimeRoot" for d in r["directives"] for c in d.get("commands", []))
+assert all(c.get("componentId") != "MaTimeRoot" for d in r.get("directives", []) for c in d.get("commands", []))
 print("OK  SetValue commands target the runtime root id AudioPlayerRoot")
 
 # exact offsets: natural track change and stream starting with the track
 def _offset_cmds(resp):
-    return [c for d in resp["directives"] for c in d.get("commands", [])
+    return [c for d in resp.get("directives", []) for c in d.get("commands", [])
             if c.get("property") == "trackOffset" and c.get("componentId") == "videoPlayer"]
 lf._now_playing_state.pop(PLAYER, None); lf._screen_restarted(PLAYER)
 now_playing["v"] = dict(now_playing["v"], queue_item_id="qa", title="TA", elapsed_ms=1500, duration_ms=180000)
@@ -457,7 +457,7 @@ lf._now_playing_state.pop(PLAYER, None); lf._screen_restarted(PLAYER)   # skip: 
 now_playing["v"] = dict(now_playing["v"], queue_item_id="qc", title="TC", elapsed_ms=300, duration_ms=150000)
 clock[0] += 5
 r = refresh("300|true|0")                                      # new screen: report without the 5th field
-vis = [c["value"] for d in r["directives"] for c in d.get("commands", []) if c.get("property") == "lyricsVisible"]
+vis = [c["value"] for d in r.get("directives", []) for c in d.get("commands", []) if c.get("property") == "lyricsVisible"]
 assert vis == [True], vis
 clock[0] += 1
 refresh("1300|true|0|%d|0" % int(clock[0] * 1000))             # closed by the user
@@ -465,7 +465,7 @@ lf._now_playing_state.pop(PLAYER, None); lf._screen_restarted(PLAYER)
 now_playing["v"] = dict(now_playing["v"], queue_item_id="qd", title="TD")
 clock[0] += 5
 r = refresh("300|true|0")
-assert not [c for d in r["directives"] for c in d.get("commands", []) if c.get("property") == "lyricsVisible" and c["value"]]
+assert not [c for d in r.get("directives", []) for c in d.get("commands", []) if c.get("property") == "lyricsVisible" and c["value"]]
 print("OK  lyrics panel reopened on a new screen when it was open, not when it was closed")
 
 # flow stream ended by MA between two tracks
@@ -550,8 +550,12 @@ clock[0] += 5
 r1 = refresh("1500|true|0")
 clock[0] += 1
 r2 = refresh("2500|true|0")
-assert not any(c.get("componentId") == "Audio_PrimaryText" for d in r2["directives"] for c in d.get("commands", [])), r2
+assert not any(c.get("componentId") == "Audio_PrimaryText" for d in r2.get("directives", []) for c in d.get("commands", [])), r2
 print("OK  title/cover not resent at every refresh")
+_d6 = json.load(open(os.path.join(S, "apl_document.json")))
+_loop = [c for c in _d6["layouts"]["AudioPlayer"]["item"][0]["onMount"] if c.get("sequencer") == "maRefresh"]
+assert _loop and _loop[0]["repeatCount"] == 100000 and _loop[0]["commands"][0]["delay"] == 1000, _loop
+print("OK  refresh loop repeats by itself; the skill no longer chains refreshes")
 
 # ======================= non-APL device / ENABLE_APL=false ===================
 resp = launch(apl=False)

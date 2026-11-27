@@ -83,7 +83,7 @@ assert "s1/Echo%20de%20la%20Cuisine/i1/Echo%20de%20la%20Cuisine.mp3" in json.dum
 print("OK  launch through the real app: APL with encoded mp3 URL")
 
 resp = refresh("2500|true")
-assert kinds(resp)[-1] == "ExecuteCommands[Idle,SendEvent]", kinds(resp)
+assert not any("SendEvent" in x for x in kinds(resp)), kinds(resp)
 st = playback_state()
 assert st["current"] is True and st["activity"] == "PLAYING" and st["offsetMs"] == 2500, st
 print("OK  refresh -> /alexa/playback-state PLAYING 2500 ms (shared state across the real app)")
