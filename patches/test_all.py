@@ -44,6 +44,7 @@ for rnd in (1, 2):
         run(f"{W}/fix_seek_offset.py", T),
         run(f"{W}/fix_time_binds.py", T),
         run(f"{W}/fix_apl_background.py", T),
+        run(f"{W}/fix_apl_lyrics.py", T),
     ]
     text = "".join(outs)
     if rnd == 2:
@@ -378,6 +379,36 @@ print("OK  time binds live on the Video and the skill writes them there")
 _bg = json.dumps(_doc)
 assert '"type": "AlexaBackground"' not in _bg and '"type": "Blur"' in _bg and '"totalValue": "${trackTotal}"' in _bg
 print("OK  background: lightly blurred cover (Image + Blur filter), total = track duration only")
+
+# lyrics
+lyrics_calls = []
+ma_control.get_lyrics = lambda p: lyrics_calls.append(p) or {"queue_item_id": lf._shown_item_id(p), "lyrics": None,
+    "lrc": "[ar:x]\n[00:01.00]Hello\n[00:05.50][01:10.00]Chorus\n[00:09.00]World"}
+lines, synced = lf._parse_lyrics(None, "[00:01.00]A\n[00:05.50][01:10.00]B\n[00:09.00]C")
+assert synced and [l["t"] for l in lines] == ["A", "B", "C", "B"] and lines[0]["e"] == 5500, lines
+assert lf._parse_lyrics("x\ny", None) == ([{"s": -1, "e": -1, "t": "x"}, {"s": -1, "e": -1, "t": "y"}], False)
+assert lf._parse_lyrics(None, None) == ([], False)
+clock[0] += 5
+lf._lyrics_state.clear()
+r = refresh("12000|true|-128000")          # screen at 140 s of the track
+cmds = [c for d in r["directives"] if d["type"].endswith("ExecuteCommands") for c in d["commands"]]
+props = {c.get("property"): c.get("value") for c in cmds if c["type"] == "SetValue"}
+assert props.get("lyricsAvailable") is True and props.get("lyricsSynced") is True, props
+assert len(props["lyricsLines"]) == 4 and lyrics_calls == [PLAYER], (props, lyrics_calls)
+scroll = [c for c in cmds if c["type"] == "ScrollToIndex"]
+assert scroll and scroll[-1]["index"] == 3, scroll     # 140 s -> chorus repeated at 70 s (last line)
+clock[0] += 1
+r = refresh("12500|true|-128000")
+assert not [c for d in r["directives"] for c in d.get("commands", []) if c.get("type") == "ScrollToIndex"]
+assert lyrics_calls == [PLAYER], "lyrics fetched once per track"
+lf._screen_restarted(PLAYER)                # new screen: lyrics sent again
+clock[0] += 1
+r = refresh("1000|true|-128000")
+assert any(c.get("property") == "lyricsLines" for d in r["directives"] for c in d.get("commands", []))
+_d2 = json.dumps(json.load(open(os.path.join(S, "apl_document.json"))))
+for k in ("maLyricsPanel", "maLyricsButton", '"maLyrics"', "trackPos", "Array.range(200)"):
+    assert k in _d2, k
+print("OK  lyrics: LRC parsed, sent once per track, scrolled to the current line, resent on a new screen")
 
 # ======================= non-APL device / ENABLE_APL=false ===================
 resp = launch(apl=False)

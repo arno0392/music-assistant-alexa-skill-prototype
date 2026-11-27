@@ -26,3 +26,4 @@ Scripts appliqués sur des copies des fichiers du conteneur (`/app/src/skill/…
 | `fix_seek_offset.py` | `lambda_function.py` | après un déplacement du curseur sur l'écran, temps recalé sur la position demandée (plus de retour à 0) |
 | `fix_time_binds.py` | `apl_document.json`, `lambda_function.py` | valeurs de temps (décalage, recalage) portées par le composant Video lui-même : les recalages s'appliquent enfin |
 | `fix_apl_background.py` | `apl_document.json` | fond : pochette légèrement floutée (filtre Blur 8 dp) et assombrie ; temps total = durée du titre uniquement |
+| `fix_apl_lyrics.py` | `apl_document.json`, `ma_control.py`, `lambda_function.py` | paroles synchronisées : bouton bulle à droite de ⏭, panneau à la place de la pochette, ligne en cours en blanc, défilement automatique |
