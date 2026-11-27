@@ -46,6 +46,7 @@ for rnd in (1, 2):
         run(f"{W}/fix_apl_background.py", T),
         run(f"{W}/fix_apl_lyrics.py", T),
         run(f"{W}/fix_root_id.py", T),
+        run(f"{W}/fix_time_precision.py", T),
     ]
     text = "".join(outs)
     if rnd == 2:
@@ -414,6 +415,26 @@ _all = open(os.path.join(S, "lambda_function.py")).read() + _d2
 assert '"componentId": "MaTimeRoot"' not in _all and '"componentId": "AudioPlayerRoot"' in _all
 assert all(c.get("componentId") != "MaTimeRoot" for d in r["directives"] for c in d.get("commands", []))
 print("OK  SetValue commands target the runtime root id AudioPlayerRoot")
+
+# exact offsets: natural track change and stream starting with the track
+def _offset_cmds(resp):
+    return [c for d in resp["directives"] for c in d.get("commands", [])
+            if c.get("property") == "trackOffset" and c.get("componentId") == "videoPlayer"]
+lf._now_playing_state.pop(PLAYER, None); lf._screen_restarted(PLAYER)
+now_playing["v"] = dict(now_playing["v"], queue_item_id="qa", title="TA", elapsed_ms=1500, duration_ms=180000)
+clock[0] += 5
+o = _offset_cmds(refresh("1600|true|0|%d" % int(clock[0] * 1000)))
+assert o and o[0]["value"] == 0, o
+assert shared_store.get_report(PLAYER)["observedAt"] == clock[0]
+clock[0] += 5
+refresh("181000|true|0|%d" % int(clock[0] * 1000))      # screen still on TA's offset
+now_playing["v"] = dict(now_playing["v"], queue_item_id="qb", title="TB", elapsed_ms=500, duration_ms=200000)
+clock[0] += 5
+o = _offset_cmds(refresh("183000|true|0|%d" % int(clock[0] * 1000)))
+assert o and o[0]["value"] == 180000, o     # TB starts where TA (180 s) ends
+r = refresh("183500|true|0|%d" % int((clock[0] - 3600) * 1000))   # implausible device clock: ignored
+assert shared_store.get_report(PLAYER)["observedAt"] == clock[0]
+print("OK  exact offsets: 0 at stream start, previous offset + duration on a natural track change; device clock")
 
 # ======================= non-APL device / ENABLE_APL=false ===================
 resp = launch(apl=False)
