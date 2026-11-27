@@ -27,3 +27,4 @@ Scripts appliqués sur des copies des fichiers du conteneur (`/app/src/skill/…
 | `fix_time_binds.py` | `apl_document.json`, `lambda_function.py` | valeurs de temps (décalage, recalage) portées par le composant Video lui-même : les recalages s'appliquent enfin |
 | `fix_apl_background.py` | `apl_document.json` | fond : pochette légèrement floutée (filtre Blur 8 dp) et assombrie ; temps total = durée du titre uniquement |
 | `fix_apl_lyrics.py` | `apl_document.json`, `ma_control.py`, `lambda_function.py` | paroles synchronisées : bouton bulle à droite de ⏭, panneau à la place de la pochette, ligne en cours en blanc, défilement automatique |
+| `fix_root_id.py` | `apl_document.json`, `lambda_function.py` | les SetValue visent l'id réel du conteneur racine (AudioPlayerRoot) : bouton paroles et total enfin pris en compte |

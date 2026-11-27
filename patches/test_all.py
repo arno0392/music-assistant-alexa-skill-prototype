@@ -45,6 +45,7 @@ for rnd in (1, 2):
         run(f"{W}/fix_time_binds.py", T),
         run(f"{W}/fix_apl_background.py", T),
         run(f"{W}/fix_apl_lyrics.py", T),
+        run(f"{W}/fix_root_id.py", T),
     ]
     text = "".join(outs)
     if rnd == 2:
@@ -409,6 +410,10 @@ _d2 = json.dumps(json.load(open(os.path.join(S, "apl_document.json"))))
 for k in ("maLyricsPanel", "maLyricsButton", '"maLyrics"', "trackPos", "Array.range(200)"):
     assert k in _d2, k
 print("OK  lyrics: LRC parsed, sent once per track, scrolled to the current line, resent on a new screen")
+_all = open(os.path.join(S, "lambda_function.py")).read() + _d2
+assert '"componentId": "MaTimeRoot"' not in _all and '"componentId": "AudioPlayerRoot"' in _all
+assert all(c.get("componentId") != "MaTimeRoot" for d in r["directives"] for c in d.get("commands", []))
+print("OK  SetValue commands target the runtime root id AudioPlayerRoot")
 
 # ======================= non-APL device / ENABLE_APL=false ===================
 resp = launch(apl=False)
