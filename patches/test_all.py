@@ -375,8 +375,9 @@ assert {"trackOffset", "pendingElapsed", "needsResync"} <= {b["name"] for b in _
 _src = open(os.path.join(S, "lambda_function.py")).read()
 assert not re.search(r'"MaTimeRoot",\s*"property": "(trackOffset|pendingElapsed|needsResync)"', _src)
 print("OK  time binds live on the Video and the skill writes them there")
-assert '"backgroundBlur": true' in json.dumps(_doc) and '"colorOverlay": true' in json.dumps(_doc)
-print("OK  background: blurred cover with colour overlay")
+_bg = json.dumps(_doc)
+assert '"type": "AlexaBackground"' not in _bg and '"type": "Blur"' in _bg and '"totalValue": "${trackTotal}"' in _bg
+print("OK  background: lightly blurred cover (Image + Blur filter), total = track duration only")
 
 # ======================= non-APL device / ENABLE_APL=false ===================
 resp = launch(apl=False)
