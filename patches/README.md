@@ -47,3 +47,4 @@ Scripts appliqués sur des copies des fichiers du conteneur (`/app/src/skill/…
 | `fix_tv_remote.py` | `apl_document.json`, `lambda_function.py` | télécommande de TV : gauche/droite = précédent/suivant, OK = lecture/pause, haut/bas = paroles (focus donné au bouton paroles sur une TV) |
 | `fix_tv_diag.py` | `apl_document.json`, `lambda_function.py` | diagnostic temporaire TV : journalise chaque touche reçue par la page (« Remote key ») et le type d’écran de chaque appareil (« Screen of ») |
 | `fix_voice_next_file.py` | `app.py` | la 2e piste de l’écran (`/ma-voice-next.mp3`) est un vrai MP3 silencieux, servi sans authentification : plus de fenêtre « Nom d’utilisateur / Mot de passe » sur une TV. **Nouveau montage : `app.py`** |
+| `fix_tv_nav.py` | `apl_document.json` | TV : ←/→ déplacent un surlignage entre ⏮ ⏯ ⏭ et paroles, OK appuie sur le bouton surligné, ↑/↓ paroles, touches média directes ; invisible sur écran tactile |

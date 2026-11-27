@@ -40,7 +40,7 @@ def find(node, cid):
     return None
 
 
-if "SetFocus" in json.dumps(root.get("onMount")):
+if "SetFocus" in json.dumps(root.get("onMount")) or "remoteFocus" in json.dumps(root):
     print("apl_document (telecommande): deja patche")
 else:
     handlers = [
