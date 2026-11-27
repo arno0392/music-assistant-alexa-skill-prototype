@@ -1,11 +1,12 @@
 """PATCH: move between the screen's buttons with a TV remote (after fix_tv_remote/fix_tv_diag).
 
 A TV's Alexa app sends the remote's keys to the page but gives focus to none of its
-buttons. The page now keeps its own selection: the first key focuses a hidden key
-catcher and highlights play/pause; Left/Right move the highlight across previous,
-play/pause, next and lyrics; OK presses the highlighted button; Up/Down show/hide the
-lyrics; the media keys keep their direct action. Nothing changes on a touch screen:
-without a remote key the highlight stays transparent.
+buttons. The page now keeps its own selection, like the buttons of a TV app: the first
+key focuses a hidden key catcher and highlights play/pause. Left/Right move across
+previous, play/pause, next and lyrics; Up goes to the progress bar, where Left/Right
+seek 10 s back/forward, and Down comes back to the buttons; OK presses the highlighted
+button. The arrows never act by themselves; the remote's media keys keep their own
+action. Nothing changes on a touch screen: without a remote key nothing is dimmed.
 
 usage: python3 fix_tv_nav.py SRC_DIR
 """
@@ -43,9 +44,6 @@ PREV = keys("MediaRewind", "MediaPreviousTrack", "MediaTrackPrevious")
 NEXT = keys("MediaFastForward", "MediaNextTrack", "MediaTrackNext")
 PLAY = keys("MediaPlayPause", "MediaPlay", "MediaPause")
 diag = {"type": "SendEvent", "arguments": ["KeyDiag", "${event.keyboard.code}", "${event.keyboard.key}"]}
-show_lyrics = [{"type": "SetValue", "componentId": "AudioPlayerRoot", "property": "lyricsVisible", "value": True},
-               {"type": "ScrollToIndex", "componentId": "maLyrics", "index": "${lyricsIndex}", "align": "center"}]
-hide_lyrics = [{"type": "SetValue", "componentId": "AudioPlayerRoot", "property": "lyricsVisible", "value": False}]
 
 # undo the earlier attempts: native focus on the lyrics button never took on a TV
 lyr = find(root, lambda n: n.get("id") == "maLyricsButton")
@@ -56,12 +54,12 @@ root.setdefault("bind", []).append({"name": "remoteFocus", "type": "number", "va
 
 
 def highlight(index, item, round_size=None):
+    # With the remote, the selected control stays bright and the others dim: a grey
+    # halo cannot be told apart from the play/pause button's own grey disc.
     frame = {"type": "Frame", "item": item,
-             "backgroundColor": "${remoteFocus == %d ? 'rgba(255,255,255,0.28)' : 'transparent'}" % index}
+             "opacity": "${remoteFocus < 0 || remoteFocus == %d ? 1 : 0.35}" % index}
     if round_size:
-        frame.update(width="100%", height="100%", borderRadius=round_size)
-    else:
-        frame["borderRadius"] = "1000dp"
+        frame.update(width="100%", height="100%")
     return frame
 
 
@@ -76,6 +74,16 @@ for i, it in enumerate(items):
         if idx is not None:
             it["item"] = highlight(idx, it["item"], "@secondaryControlSize")
 
+SLIDER = 10
+bar = find(root, lambda n: n.get("id") == "slider")
+holder = find(root, lambda n: isinstance(n.get("item"), list) and bar in n["item"])
+holder["item"][holder["item"].index(bar)] = {
+    "type": "Frame", "width": "100%", "item": bar,
+    "opacity": "${remoteFocus < 0 || remoteFocus == %d ? 1 : 0.35}" % SLIDER}
+
+pos = "(videoProgressValue > trackOffset ? videoProgressValue - trackOffset : 0)"
+seek = lambda delta: [{"type": "SetValue", "componentId": "maSeek", "property": "text",
+                       "value": "${Math.max(0, Math.min(trackTotal - 2000, %s %+d))}@${utcTime}" % (pos, delta)}]
 press = [
     {"type": "SendEvent", "arguments": ["Previous"], "when": "${remoteFocus == 0}"},
     {"type": "SendEvent", "arguments": ["PlayPause"], "when": "${remoteFocus == 1}"},
@@ -87,16 +95,19 @@ press = [
 ]
 move = lambda expr: [{"type": "SetValue", "componentId": "AudioPlayerRoot", "property": "remoteFocus", "value": expr}]
 fdiag = {"type": "SendEvent", "arguments": ["KeyDiag", "${event.keyboard.code}", "${event.keyboard.key}", "focused"]}
+on_bar = "remoteFocus == %d" % SLIDER
 catcher = {
     "type": "TouchWrapper", "id": "maRemote", "position": "absolute", "top": 0, "left": 0,
     "width": "1dp", "height": "1dp",
     "item": {"type": "Frame", "width": "1dp", "height": "1dp"},
     "handleKeyDown": [
+        {"when": "${(%s) && %s}" % (keys("ArrowLeft"), on_bar), "commands": seek(-10000)},
+        {"when": "${(%s) && %s}" % (keys("ArrowRight"), on_bar), "commands": seek(10000)},
         {"when": "${%s}" % keys("ArrowLeft"), "commands": move("${Math.max(0, remoteFocus - 1)}")},
         {"when": "${%s}" % keys("ArrowRight"), "commands": move("${Math.min(lyricsAvailable ? 3 : 2, remoteFocus + 1)}")},
+        {"when": "${%s}" % keys("ArrowUp"), "commands": move(SLIDER)},
+        {"when": "${%s}" % keys("ArrowDown"), "commands": move("${%s ? 1 : remoteFocus}" % on_bar)},
         {"when": "${%s}" % keys("Enter", "NumpadEnter"), "commands": press},
-        {"when": "${%s}" % keys("ArrowUp"), "commands": show_lyrics},
-        {"when": "${%s}" % keys("ArrowDown"), "commands": hide_lyrics},
         {"when": "${%s}" % PREV, "commands": [{"type": "SendEvent", "arguments": ["Previous"]}]},
         {"when": "${%s}" % NEXT, "commands": [{"type": "SendEvent", "arguments": ["Next"]}]},
         {"when": "${%s}" % PLAY, "commands": [{"type": "SendEvent", "arguments": ["PlayPause"]}]},
@@ -106,20 +117,18 @@ for h in catcher["handleKeyDown"]:
     h["commands"] = [fdiag] + h["commands"]
 root["items"].append(catcher)
 
-# Keys that reach the document mean nothing has focus yet: take it (and log it).
-take_focus = [diag,
-              {"type": "SetValue", "componentId": "AudioPlayerRoot", "property": "remoteFocus", "value": 1},
-              {"type": "SetFocus", "componentId": "maRemote"}]
-# Keys that reach the document mean nothing has focus: keep the direct actions that work
-# without it, and ask for the focus so that the next keys move the highlight instead.
-take_focus = [{"type": "SetValue", "componentId": "AudioPlayerRoot", "property": "remoteFocus", "value": 1},
-              {"type": "SetFocus", "componentId": "maRemote"}]
+# Keys that reach the document mean nothing has focus yet: take it and highlight
+# play/pause (the bar for Up). Only OK acts, as a press on play/pause.
+def take_focus(index):
+    return [{"type": "SetValue", "componentId": "AudioPlayerRoot", "property": "remoteFocus", "value": index},
+            {"type": "SetFocus", "componentId": "maRemote"}]
+
+
 doc["handleKeyDown"] = [
-    {"when": "${%s}" % keys("ArrowLeft"), "commands": [diag, {"type": "SendEvent", "arguments": ["Previous"]}] + take_focus},
-    {"when": "${%s}" % keys("ArrowRight"), "commands": [diag, {"type": "SendEvent", "arguments": ["Next"]}] + take_focus},
-    {"when": "${%s}" % keys("Enter", "NumpadEnter"), "commands": [diag, {"type": "SendEvent", "arguments": ["PlayPause"]}] + take_focus},
-    {"when": "${%s}" % keys("ArrowUp"), "commands": [diag] + show_lyrics[:1] + take_focus},
-    {"when": "${%s}" % keys("ArrowDown"), "commands": [diag] + hide_lyrics + take_focus},
+    {"when": "${%s}" % keys("ArrowUp"), "commands": [diag] + take_focus(SLIDER)},
+    {"when": "${%s}" % keys("ArrowLeft", "ArrowRight", "ArrowDown"), "commands": [diag] + take_focus(1)},
+    {"when": "${%s}" % keys("Enter", "NumpadEnter"),
+     "commands": [diag, {"type": "SendEvent", "arguments": ["PlayPause"]}] + take_focus(1)},
     {"when": "${%s}" % PREV, "commands": [diag, {"type": "SendEvent", "arguments": ["Previous"]}]},
     {"when": "${%s}" % NEXT, "commands": [diag, {"type": "SendEvent", "arguments": ["Next"]}]},
     {"when": "${%s}" % PLAY, "commands": [diag, {"type": "SendEvent", "arguments": ["PlayPause"]}]},
