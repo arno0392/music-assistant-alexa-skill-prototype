@@ -228,6 +228,7 @@ patch_text(os.path.join(base, "skill", "lambda_function.py"), "lambda_function (
 ], append='''
 
 # Synchronized lyrics on the screen (see apl_document: maLyrics).
+import os
 import re as _re
 _lyrics_state = {}      # player_id -> {"id", "lines", "synced", "ready", "sent", "idx"}
 _LRC_TAG = _re.compile(r"\\[(\\d{1,3}):(\\d{1,2}(?:[.:]\\d{1,3})?)\\]")
@@ -246,10 +247,17 @@ def _parse_lyrics(lyrics, lrc):
                 timed.append((ms, text))
         timed.sort(key=lambda x: x[0])
         if timed:
+            # lines lit slightly early: what the Echo reports is decoded a bit before it is heard
+            # and a reader needs the line a moment before it is sung (LYRICS_LEAD_MS, default 400)
+            try:
+                lead = int(os.environ.get("LYRICS_LEAD_MS", "400"))
+            except ValueError:
+                lead = 400
             lines = []
             for i, (start, text) in enumerate(timed[:_LYRICS_MAX_LINES]):
                 end = timed[i + 1][0] if i + 1 < len(timed) else 10 ** 9
-                lines.append({"s": start, "e": max(end, start + 1), "t": text or "\\u266a"})
+                s0 = max(0, start - lead)
+                lines.append({"s": s0, "e": max(end - lead, s0 + 1), "t": text or "\\u266a"})
             return lines, True
     if lyrics:
         lines = [{"s": -1, "e": -1, "t": t.strip()} for t in lyrics.strip().splitlines()]

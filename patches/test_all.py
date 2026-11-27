@@ -387,7 +387,7 @@ lyrics_calls = []
 ma_control.get_lyrics = lambda p: lyrics_calls.append(p) or {"queue_item_id": lf._shown_item_id(p), "lyrics": None,
     "lrc": "[ar:x]\n[00:01.00]Hello\n[00:05.50][01:10.00]Chorus\n[00:09.00]World"}
 lines, synced = lf._parse_lyrics(None, "[00:01.00]A\n[00:05.50][01:10.00]B\n[00:09.00]C")
-assert synced and [l["t"] for l in lines] == ["A", "B", "C", "B"] and lines[0]["e"] == 5500, lines
+assert synced and [l["t"] for l in lines] == ["A", "B", "C", "B"] and lines[0]["e"] == 5100 and lines[0]["s"] == 600, lines
 assert lf._parse_lyrics("x\ny", None) == ([{"s": -1, "e": -1, "t": "x"}, {"s": -1, "e": -1, "t": "y"}], False)
 assert lf._parse_lyrics(None, None) == ([], False)
 clock[0] += 5
