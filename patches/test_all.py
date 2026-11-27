@@ -49,6 +49,7 @@ for rnd in (1, 2):
         run(f"{W}/fix_time_precision.py", T),
         run(f"{W}/fix_lyrics_keep.py", T),
         run(f"{W}/fix_flow_end.py", T),
+        run(f"{W}/fix_voice_next.py", T),
     ]
     text = "".join(outs)
     if rnd == 2:
@@ -473,6 +474,16 @@ clock[0] += 6
 refresh("150000|end|0|%d|0" % int(clock[0] * 1000))
 assert calls == [], calls                                       # MA stopped: nothing to continue
 print("OK  flow stream ended while MA plays: next track started once; not when MA stopped; never a pause")
+
+calls.clear()
+clock[0] += 1
+refresh("1000|true|0")                                   # screen live
+r = intent("AMAZON.NextIntent")
+assert calls == [("cmd", PLAYER, "next")] and "shouldEndSession" not in r, (calls, r)
+clock[0] += 30                                           # screen closed
+r = intent("AMAZON.PreviousIntent")
+assert r.get("shouldEndSession") is True, r
+print("OK  voice next/previous keeps the screen open while it is live")
 
 # ======================= non-APL device / ENABLE_APL=false ===================
 resp = launch(apl=False)

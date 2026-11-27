@@ -31,3 +31,4 @@ Scripts appliqués sur des copies des fichiers du conteneur (`/app/src/skill/…
 | `fix_time_precision.py` | `apl_document.json`, `shared_store.py`, `lambda_function.py` | position exacte sans attendre MA : 0 au début d'un flux, décalage précédent + durée au changement de titre ; horloge de l'Echo dans les rapports |
 | `fix_lyrics_keep.py` | `apl_document.json`, `lambda_function.py` | le panneau des paroles reste ouvert après ⏮ ⏭ ou un déplacement du curseur |
 | `fix_flow_end.py` | `apl_document.json`, `ma_control.py`, `lambda_function.py` | flux terminé par MA entre deux titres (changement de fréquence d'échantillonnage) : le skill relance le titre suivant |
+| `fix_voice_next.py` | `lambda_function.py` | « Alexa, suivant / précédent » : la session (et l'écran) restent ouverts quand l'écran est affiché |
