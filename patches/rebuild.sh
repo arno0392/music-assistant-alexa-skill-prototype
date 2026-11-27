@@ -58,4 +58,4 @@ echo "Montages attendus dans docker-compose.yml (section volumes:) :"
 for f in $FILES; do
     echo "      - ./patches/src/$f:/app/src/$f:ro"
 done
-echo "Puis : docker compose up -d"
+echo "Puis : docker compose up -d --force-recreate   (les fichiers montes ont ete remplaces)"
