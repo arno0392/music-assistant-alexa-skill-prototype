@@ -14,3 +14,4 @@ Scripts appliqués sur des copies des fichiers du conteneur (`/app/src/skill/…
 | `fix_apl_ux.py` | `apl_document.json`, `lambda_function.py`, `ma_control.py` | barre de lecture -> seek Music Assistant, retour visuel des boutons, temps recalé à chaque nouvel écran |
 | `fix_apl_seek.py` | `apl_document.json`, `util.py`, `lambda_function.py` | la barre de lecture passe par le rafraîchissement (SendEvent ignoré en mode rapide) -> seek Music Assistant |
 | `fix_apl_pause.py` | `apl.py` | pause depuis Music Assistant : autoplay coupé aussi sur les contrôles (introuvables après fix_apl_buttons.py) |
+| `fix_stream_key.py` | `shared_store.py`, `ma_routes.py`, `alexa_routes.py`, `lambda_function.py` | flux comparés par identité (rapport de position "current" correct) + titre frais avant réaffichage |

@@ -61,7 +61,7 @@ else:
 # ---------------------------------------------------------------- util.py
 path = P("skill", "util.py")
 src = open(path, encoding="utf-8").read()
-if '"components": ["maReport"]' in src:
+if '"components": ["maReport"' in src:   # also matches ["maReport", "maSeek"]
     print("util (rapport): deja patche")
 else:
     old = '''                    "${videoProgressValue}",

@@ -24,7 +24,7 @@ P = lambda *p: os.path.join(base, *p)
 doc_path = P("skill", "apl_document.json")
 doc = json.load(open(doc_path, encoding="utf-8"))
 raw = json.dumps(doc)
-if '"Seek"' in raw:
+if '"finally"' in raw:   # button feedback marker (fix_apl_seek.py removes the "Seek" event)
     print("apl_document (ux): deja patche")
 else:
     assert "MaSkipButtons" in raw and "trackOffset" in raw, "patches precedents manquants"
