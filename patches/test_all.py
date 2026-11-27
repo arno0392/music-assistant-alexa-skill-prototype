@@ -60,6 +60,7 @@ for rnd in (1, 2):
         run(f"{W}/fix_play_audio_live.py", T),
         run(f"{W}/fix_fallback_live.py", T),
         run(f"{W}/fix_custom_skip_intents.py", T),
+        run(f"{W}/fix_stream_ran_out.py", T),
     ]
     text = "".join(outs)
     if rnd == 2:
@@ -579,6 +580,30 @@ calls.clear()
 intent("MaPreviousIntent"); intent("MaNextIntent")
 assert [c[2] for c in calls] == ["previous", "next"], calls
 print("OK  custom MaNextIntent / MaPreviousIntent handled like the built-in ones")
+
+# the flow stream ran dry at the end of a track (MA ended it before a 96 kHz track)
+lf._now_playing_state.pop(PLAYER, None); lf._screen_restarted(PLAYER)
+now_playing["v"] = dict(now_playing["v"], queue_item_id="qx", title="TX", elapsed_ms=500, duration_ms=200000)
+clock[0] += 5
+refresh("1000|true|0")
+clock[0] += 30
+refresh("198500|true|0")
+calls.clear(); refs.clear()
+queue_state["v"] = "paused"
+clock[0] += 3
+refresh("198800|false|0")                         # the Video stalls at the end of the track
+assert calls == [("cmd", PLAYER, "advance")] and refs == ["qx"], (calls, refs)
+calls.clear()
+lf._now_playing_state.pop(PLAYER, None); lf._screen_restarted(PLAYER)
+now_playing["v"] = dict(now_playing["v"], queue_item_id="qy", title="TY")
+clock[0] += 5
+refresh("1000|true|0")
+clock[0] += 30
+queue_state["v"] = "playing"
+refresh("60000|true|0"); clock[0] += 3
+refresh("60100|false|0")                          # a real pause mid-track
+assert calls == [("cmd", PLAYER, "pause")], calls
+print("OK  stream run dry at the end of a track: next track; a mid-track pause stays a pause")
 
 # ======================= non-APL device / ENABLE_APL=false ===================
 resp = launch(apl=False)

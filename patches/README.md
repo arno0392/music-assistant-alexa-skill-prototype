@@ -42,3 +42,4 @@ Scripts appliqués sur des copies des fichiers du conteneur (`/app/src/skill/…
 | `fix_play_audio_live.py` | `lambda_function.py` | « PlayAudio » pendant que l'écran joue : simple reprise, plus de redémarrage du titre |
 | `fix_fallback_live.py` | `lambda_function.py` | phrase non comprise pendant que l'écran joue : ignorée, l'écran reste ouvert |
 | `fix_custom_skip_intents.py` | `lambda_function.py` | intents perso MaNextIntent / MaPreviousIntent (phrases en plus : « chanson précédente »…) traités comme suivant/précédent |
+| `fix_stream_ran_out.py` | `lambda_function.py` | flux épuisé en fin de titre (MA l'a terminé avant un titre 96 kHz) : le skill lance le titre suivant au lieu d'une pause |
