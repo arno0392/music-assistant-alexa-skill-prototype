@@ -58,7 +58,8 @@ class APLKeyDiagEventHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         args = handler_input.request_envelope.request.arguments
-        logger.info("Remote key: code=%s key=%s", *(list(args[1:3]) + [None, None])[:2])
+        a = list(args[1:4]) + [None, None, None]
+        logger.info("Remote key: code=%s key=%s (%s)", a[0], a[1], a[2] or "page")
         return handler_input.response_builder.set_should_end_session(None).response
 
 

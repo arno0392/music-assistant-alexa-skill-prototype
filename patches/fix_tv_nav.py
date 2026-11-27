@@ -42,7 +42,6 @@ def keys(*names):
 PREV = keys("MediaRewind", "MediaPreviousTrack", "MediaTrackPrevious")
 NEXT = keys("MediaFastForward", "MediaNextTrack", "MediaTrackNext")
 PLAY = keys("MediaPlayPause", "MediaPlay", "MediaPause")
-NAV = keys("ArrowLeft", "ArrowRight", "Enter", "NumpadEnter")
 diag = {"type": "SendEvent", "arguments": ["KeyDiag", "${event.keyboard.code}", "${event.keyboard.key}"]}
 show_lyrics = [{"type": "SetValue", "componentId": "AudioPlayerRoot", "property": "lyricsVisible", "value": True},
                {"type": "ScrollToIndex", "componentId": "maLyrics", "index": "${lyricsIndex}", "align": "center"}]
@@ -87,6 +86,7 @@ press = [
      "when": "${remoteFocus == 3 && lyricsVisible}"},
 ]
 move = lambda expr: [{"type": "SetValue", "componentId": "AudioPlayerRoot", "property": "remoteFocus", "value": expr}]
+fdiag = {"type": "SendEvent", "arguments": ["KeyDiag", "${event.keyboard.code}", "${event.keyboard.key}", "focused"]}
 catcher = {
     "type": "TouchWrapper", "id": "maRemote", "position": "absolute", "top": 0, "left": 0,
     "width": "1dp", "height": "1dp",
@@ -102,16 +102,24 @@ catcher = {
         {"when": "${%s}" % PLAY, "commands": [{"type": "SendEvent", "arguments": ["PlayPause"]}]},
     ],
 }
+for h in catcher["handleKeyDown"]:
+    h["commands"] = [fdiag] + h["commands"]
 root["items"].append(catcher)
 
 # Keys that reach the document mean nothing has focus yet: take it (and log it).
 take_focus = [diag,
               {"type": "SetValue", "componentId": "AudioPlayerRoot", "property": "remoteFocus", "value": 1},
               {"type": "SetFocus", "componentId": "maRemote"}]
+# Keys that reach the document mean nothing has focus: keep the direct actions that work
+# without it, and ask for the focus so that the next keys move the highlight instead.
+take_focus = [{"type": "SetValue", "componentId": "AudioPlayerRoot", "property": "remoteFocus", "value": 1},
+              {"type": "SetFocus", "componentId": "maRemote"}]
 doc["handleKeyDown"] = [
-    {"when": "${%s}" % NAV, "commands": take_focus},
-    {"when": "${%s}" % keys("ArrowUp"), "commands": [diag] + show_lyrics[:1] + take_focus[1:]},
-    {"when": "${%s}" % keys("ArrowDown"), "commands": [diag] + hide_lyrics + take_focus[1:]},
+    {"when": "${%s}" % keys("ArrowLeft"), "commands": [diag, {"type": "SendEvent", "arguments": ["Previous"]}] + take_focus},
+    {"when": "${%s}" % keys("ArrowRight"), "commands": [diag, {"type": "SendEvent", "arguments": ["Next"]}] + take_focus},
+    {"when": "${%s}" % keys("Enter", "NumpadEnter"), "commands": [diag, {"type": "SendEvent", "arguments": ["PlayPause"]}] + take_focus},
+    {"when": "${%s}" % keys("ArrowUp"), "commands": [diag] + show_lyrics[:1] + take_focus},
+    {"when": "${%s}" % keys("ArrowDown"), "commands": [diag] + hide_lyrics + take_focus},
     {"when": "${%s}" % PREV, "commands": [diag, {"type": "SendEvent", "arguments": ["Previous"]}]},
     {"when": "${%s}" % NEXT, "commands": [diag, {"type": "SendEvent", "arguments": ["Next"]}]},
     {"when": "${%s}" % PLAY, "commands": [diag, {"type": "SendEvent", "arguments": ["PlayPause"]}]},
