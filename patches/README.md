@@ -53,3 +53,4 @@ Scripts appliqués sur des copies des fichiers du conteneur (`/app/src/skill/…
 | `fix_seek_start.py` | `lambda_function.py` | ramener la barre au tout début du titre relance le morceau (un saut à 0 s ne faisait rien dans MA) |
 | `fix_lyrics_tv.py` | `lambda_function.py` | paroles à l’heure sur une TV (avance `LYRICS_LEAD_MS_TV`, 300 ms par défaut ; Echo : `LYRICS_LEAD_MS`, 600 ms par défaut) ; panneau des paroles gardé ouvert après « suivant » ou un saut |
 | `fix_play_button_sync.py` | `apl_document.json` | le bouton lecture/pause suit le lecteur quel que soit l’auteur de la pause (MA web, Echo) : onPlay/onPause/onEnd du Video règlent son état |
+| `fix_push_timing_log.py` | `ma_routes.py` | journalise les champs de temps envoyés par MA (`MA timing item=… duration=… elapsed=…`), pour tester la PR MA #8252 sur un vrai Echo |
