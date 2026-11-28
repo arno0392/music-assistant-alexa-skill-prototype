@@ -49,6 +49,8 @@ def _time_drift(player_id, state, info, now):
     shown = pos["current"] - pos["offset"] + (now - pos["t"]) * 1000
     if abs(shown - elapsed) <= _DRIFT_TOLERANCE_MS:
         state["drift_done"] = 2          # aligned: nothing more to check on this track
+        logger.info("Time sync %s: drift check %.1fs after natural track changes: ok", player_id,
+                    (shown - elapsed) / 1000)
         return False
     state["drift_done"] = state.get("drift_done", 0) + 1
     logger.info("Time sync %s: drift of %.1fs after natural track changes (screen %.1fs, MA %.1fs): "
